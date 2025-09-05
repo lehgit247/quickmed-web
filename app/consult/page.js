@@ -1,5 +1,7 @@
 "use client";
 import { useState } from "react";
+import Link from "next/link";
+import Image from "next/image";
 
 export default function ConsultPage() {
   const [form, setForm] = useState({
@@ -18,15 +20,12 @@ export default function ConsultPage() {
   function handleSubmit(e) {
     e.preventDefault();
 
-    // simple validation: must have symptoms
     if (!form.symptoms.trim()) {
       setError("Please describe your symptoms.");
       return;
     }
-
     setError("");
 
-    // fake "doctor matching" (demo)
     const doctors = [
       { name: "Dr. Ada Okoye", specialty: "General Practitioner", rating: "4.9", eta: "~2–5 min" },
       { name: "Dr. Femi Yusuf", specialty: "Internal Medicine", rating: "4.8", eta: "~3–6 min" },
@@ -95,13 +94,13 @@ export default function ConsultPage() {
 
           <div className="row">
             <button type="submit" className="btn btn-primary">Connect to Doctor</button>
-            <a href="/" className="btn btn-ghost">Back Home</a>
+            <Link href="/" className="btn btn-ghost">Back Home</Link>
           </div>
         </form>
       ) : (
         <div className="card match">
           <div className="match-header">
-            <img src="/quickmed-icon.png" alt="" className="match-icon" />
+            <Image src="/quickmed-icon.png" alt="" width={40} height={40} className="match-icon" />
             <div>
               <div className="match-name">{match.name}</div>
               <div className="match-sub">
@@ -136,7 +135,7 @@ export default function ConsultPage() {
 
           <div className="row">
             <button className="btn btn-ghost" onClick={reset}>Start Over</button>
-            <a href="/book" className="btn btn-ghost">Book Hospital</a>
+            <Link href="/book" className="btn btn-ghost">Book Hospital</Link>
           </div>
         </div>
       )}

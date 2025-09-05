@@ -1,4 +1,6 @@
-import "./globals.css"; // keep this at the top so CSS loads
+import "./globals.css";
+import Link from "next/link";
+import Image from "next/image";
 
 export const metadata = {
   title: "QuickMed Care",
@@ -13,26 +15,17 @@ export default function RootLayout({ children }) {
         <header className="navbar">
           <div className="nav-container">
             {/* left: logo + brand */}
-            <a className="nav-logo" href="/">
-              <img src="/quickmed-icon.png" alt="QuickMed Care" />
+            <Link className="nav-logo" href="/">
+              {/* small icon in navbar */}
+              <Image src="/quickmed-icon.png" alt="QuickMed Care" width={28} height={28} />
               <span className="brand">QuickMed Care</span>
-            </a>
+            </Link>
 
-            {/* 1) hidden checkbox to control menu (CSS-only) */}
-            <input id="nav-toggle" type="checkbox" className="nav-toggle" />
-
-            {/* 2) hamburger button (label toggles the checkbox) */}
-            <label htmlFor="nav-toggle" className="hamburger" aria-label="Toggle menu">
-              <span></span>
-              <span></span>
-              <span></span>
-            </label>
-
-            {/* 3) links (will open/close on small screens) */}
+            {/* links on the right */}
             <nav className="nav-links">
-              <a href="/">Home</a>
-              <a href="/consult">Consult</a>
-              <a href="/book">Book</a>
+              <Link href="/">Home</Link>
+              <Link href="/consult">Consult</Link>
+              <Link href="/book">Book</Link>
               <a href="#about">About</a>
               <a href="#contact">Contact</a>
             </nav>
