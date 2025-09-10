@@ -3,8 +3,23 @@ import Link from "next/link";
 import Image from "next/image";
 
 export const metadata = {
-  title: "QuickMed Care",
-  description: "Instant Healthcare. Anywhere. Anytime.",
+title: "QuickMed Care — Instant Healthcare. Anywhere. Anytime.",
+  description: "Consult licensed doctors in minutes, get real e-prescriptions, and book vetted hospitals near you.",
+  metadataBase: new URL("https://quickmed-web-zpjc.vercel.app"), // change to your final domain later
+  openGraph: {
+    title: "QuickMed Care — Instant Healthcare. Anywhere. Anytime.",
+    description: "Consult licensed doctors in minutes, get real e-prescriptions, and book vetted hospitals.",
+    url: "https://quickmed-web-zpjc.vercel.app",
+    siteName: "QuickMed Care",
+    images: ["/og-image.png"], // we’ll create this next
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "QuickMed Care",
+    description: "Instant Healthcare. Anywhere. Anytime.",
+    images: ["/og-image.png"],
+  },
 };
 
 export default function RootLayout({ children }) {
