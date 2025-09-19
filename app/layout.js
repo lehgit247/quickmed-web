@@ -3,15 +3,17 @@ import Link from "next/link";
 import Image from "next/image";
 
 export const metadata = {
-title: "QuickMed Care — Instant Healthcare. Anywhere. Anytime.",
-  description: "Consult licensed doctors in minutes, get real e-prescriptions, and book vetted hospitals near you.",
-  metadataBase: new URL("https://quickmed-web-zpjc.vercel.app"), // change to your final domain later
+  title: "QuickMed Care — Instant Healthcare. Anywhere. Anytime.",
+  description:
+    "Consult licensed doctors in minutes, get real e-prescriptions, and book vetted hospitals near you.",
+  metadataBase: new URL("https://quickmed-web-zpjc.vercel.app"),
   openGraph: {
     title: "QuickMed Care — Instant Healthcare. Anywhere. Anytime.",
-    description: "Consult licensed doctors in minutes, get real e-prescriptions, and book vetted hospitals.",
+    description:
+      "Consult licensed doctors in minutes, get real e-prescriptions, and book vetted hospitals.",
     url: "https://quickmed-web-zpjc.vercel.app",
     siteName: "QuickMed Care",
-    images: ["/og-image.png"], // we’ll create this next
+    images: ["/og-image.png"],
     type: "website",
   },
   twitter: {
@@ -19,6 +21,11 @@ title: "QuickMed Care — Instant Healthcare. Anywhere. Anytime.",
     title: "QuickMed Care",
     description: "Instant Healthcare. Anywhere. Anytime.",
     images: ["/og-image.png"],
+  },
+  // 👇 NEW: tell browsers which icons to use
+  icons: {
+    icon: [{ url: "/icon.png" }],           // your 512×512 PNG inside app/
+    apple: [{ url: "/apple-icon.png" }],    // your 180×180 PNG inside app/
   },
 };
 
@@ -31,18 +38,16 @@ export default function RootLayout({ children }) {
           <div className="nav-container">
             {/* left: logo + brand */}
             <Link className="nav-logo" href="/">
-              {/* small icon in navbar */}
               <Image src="/quickmed-icon.png" alt="QuickMed Care" width={28} height={28} />
               <span className="brand">QuickMed Care</span>
             </Link>
 
-            {/* links on the right */}
             <nav className="nav-links">
               <Link href="/">Home</Link>
               <Link href="/consult">Consult</Link>
               <Link href="/book">Book</Link>
               <a href="#about">About</a>
-              <a href="#contact">Contact</a>
+              <Link href="/contact">Contact</Link>
             </nav>
           </div>
         </header>
@@ -50,7 +55,7 @@ export default function RootLayout({ children }) {
         {/* page content */}
         <main className="page-content">{children}</main>
 
-        {/* footer anchors for About / Contact */}
+        {/* ===== FOOTER ===== */}
         <footer className="site-footer" id="about">
           <div className="footer-inner">
             <h3>About QuickMed Care</h3>
@@ -60,7 +65,12 @@ export default function RootLayout({ children }) {
             </p>
 
             <div id="contact" className="contact">
-              <strong>Contact:</strong> hello@quickmed.care
+              <strong>Contact:</strong>{" "}
+              <a href="mailto:hello@quickmed.care">hello@quickmed.care</a>
+              {" · "}
+              <Link href="/privacy">Privacy</Link>
+              {" · "}
+              <Link href="/terms">Terms</Link>
             </div>
           </div>
         </footer>
