@@ -22,7 +22,8 @@ export const metadata = {
     description: "Instant Healthcare. Anywhere. Anytime.",
     images: ["/og-image.png"],
   },
-  // ❌ no custom `icons` block here — we’ll rely on app/icon.png auto behavior
+  // ✅ No custom icons block:
+  // Next.js will automatically use app/icon.png (and app/apple-icon.png if present)
 };
 
 export default function RootLayout({ children }) {
@@ -32,6 +33,7 @@ export default function RootLayout({ children }) {
         {/* ===== NAVBAR ===== */}
         <header className="navbar">
           <div className="nav-container">
+            {/* left: logo + brand */}
             <Link className="nav-logo" href="/">
               <Image src="/quickmed-icon.png" alt="QuickMed Care" width={28} height={28} />
               <span className="brand">QuickMed Care</span>
@@ -47,8 +49,10 @@ export default function RootLayout({ children }) {
           </div>
         </header>
 
+        {/* page content */}
         <main className="page-content">{children}</main>
 
+        {/* ===== FOOTER ===== */}
         <footer className="site-footer" id="about">
           <div className="footer-inner">
             <h3>About QuickMed Care</h3>
