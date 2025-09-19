@@ -688,3 +688,41 @@ body { margin: 0; font-family: Arial, sans-serif; }
   box-shadow: 0 6px 18px rgba(0,0,0,0.04);
 }
 .success h2 { margin-top: 0; }
+/* ===== CONTACT PAGE ===== */
+.contact-page { padding: 32px 0 60px; }
+.contact-title {
+  font-weight: 800;
+  font-size: clamp(22px, 4vw, 36px);
+  margin: 0 0 16px;
+  text-align: center;
+  color: #0f172a;
+}
+.contact-form label {
+  display: block;
+  font-weight: 600;
+  color: #0f172a;
+  margin-top: 10px;
+}
+.contact-form input,
+.contact-form textarea {
+  width: 100%;
+  margin-top: 6px;
+  padding: 12px;
+  border-radius: 10px;
+  border: 1px solid #e5e7eb;
+  outline: none;
+}
+.contact-form input:focus,
+.contact-form textarea:focus {
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+}
+.success-note {
+  background: #ecfdf5;
+  color: #065f46;
+  border: 1px solid #a7f3d0;
+  padding: 10px 12px;
+  border-radius: 10px;
+  margin-top: 12px;
+  text-align: center;
+}

@@ -22,11 +22,7 @@ export const metadata = {
     description: "Instant Healthcare. Anywhere. Anytime.",
     images: ["/og-image.png"],
   },
-  // 👇 NEW: tell browsers which icons to use
-  icons: {
-    icon: [{ url: "/icon.png" }],           // your 512×512 PNG inside app/
-    apple: [{ url: "/apple-icon.png" }],    // your 180×180 PNG inside app/
-  },
+  // ❌ no custom `icons` block here — we’ll rely on app/icon.png auto behavior
 };
 
 export default function RootLayout({ children }) {
@@ -36,7 +32,6 @@ export default function RootLayout({ children }) {
         {/* ===== NAVBAR ===== */}
         <header className="navbar">
           <div className="nav-container">
-            {/* left: logo + brand */}
             <Link className="nav-logo" href="/">
               <Image src="/quickmed-icon.png" alt="QuickMed Care" width={28} height={28} />
               <span className="brand">QuickMed Care</span>
@@ -52,10 +47,8 @@ export default function RootLayout({ children }) {
           </div>
         </header>
 
-        {/* page content */}
         <main className="page-content">{children}</main>
 
-        {/* ===== FOOTER ===== */}
         <footer className="site-footer" id="about">
           <div className="footer-inner">
             <h3>About QuickMed Care</h3>
