@@ -1,5 +1,6 @@
 "use client";
 import { useState } from "react";
+import Link from "next/link";
 
 export default function ContactPage() {
   const [form, setForm] = useState({ name: "", email: "", message: "" });
@@ -66,7 +67,7 @@ export default function ContactPage() {
             ✅ Thank you! Your message has been received. We’ll get back to you shortly.
           </div>
           <div className="row" style={{ marginTop: 12 }}>
-            <a className="btn btn-ghost" href="/">Back Home</a>
+            <Link className="btn btn-ghost" href="/">Back Home</Link>
           </div>
         </div>
       )}
