@@ -125,10 +125,10 @@ export default function Page() {
           <p className="trusted-title">Trusted By Leading Healthcare Partners</p>
           <div className="trusted-logos">
             {/* Replace these placeholders with real logos later */}
-            <img src="/quickmed-icon.png" alt="Partner 1" />
-            <img src="/quickmed-icon.png" alt="Partner 2" />
-            <img src="/quickmed-icon.png" alt="Partner 3" />
-            <img src="/quickmed-icon.png" alt="Partner 4" />
+           <Image src="/quickmed-icon.png" alt="Partner 1" width={48} height={48} />
+<Image src="/quickmed-icon.png" alt="Partner 2" width={48} height={48} />
+<Image src="/quickmed-icon.png" alt="Partner 3" width={48} height={48} />
+<Image src="/quickmed-icon.png" alt="Partner 4" width={48} height={48} />
           </div>
         </div>
       </section>
