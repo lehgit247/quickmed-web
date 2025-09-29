@@ -789,3 +789,48 @@ body { margin: 0; font-family: Arial, sans-serif; }
     margin: 0.5rem 0;
   }
 }
+/* === Floating Call Button === */
+.call-ambulance {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  background: red;
+  border-radius: 50%;
+  width: 60px;
+  height: 60px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+  text-decoration: none;
+  z-index: 9999;
+  transition: transform 0.2s ease;
+}
+
+.call-ambulance:hover {
+  transform: scale(1.05);
+}
+/* === Floating Call Button === */
+.call-ambulance {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  background: red;
+  border-radius: 50%;
+  width: 60px;
+  height: 60px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+  text-decoration: none;
+  z-index: 10000;
+  transition: transform 0.2s ease;
+}
+
+.call-ambulance:hover {
+  transform: scale(1.05);
+}
+
+/* Optional: make sure nothing on the page hides it */
+body { position: relative; }

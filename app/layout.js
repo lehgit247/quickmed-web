@@ -1,17 +1,17 @@
+import FloatingCallButton from "./components/FloatingCallButton";
 import "./globals.css";
-import Link from "next/link";
-import Image from "next/image";
+import Navbar from "./components/Navbar";
 
 export const metadata = {
   title: "QuickMed Care — Instant Healthcare. Anywhere. Anytime.",
   description:
     "Consult licensed doctors in minutes, get real e-prescriptions, and book vetted hospitals near you.",
-  metadataBase: new URL("https://quickmed-web-zpjc.vercel.app"),
+  metadataBase: new URL("https://quickmed-care.com"),
   openGraph: {
     title: "QuickMed Care — Instant Healthcare. Anywhere. Anytime.",
     description:
       "Consult licensed doctors in minutes, get real e-prescriptions, and book vetted hospitals.",
-    url: "https://quickmed-web-zpjc.vercel.app",
+    url: "https://quickmed-care.com",
     siteName: "QuickMed Care",
     images: ["/og-image.png"],
     type: "website",
@@ -22,37 +22,17 @@ export const metadata = {
     description: "Instant Healthcare. Anywhere. Anytime.",
     images: ["/og-image.png"],
   },
-  // ✅ No custom icons block:
-  // Next.js will automatically use app/icon.png (and app/apple-icon.png if present)
 };
 
 export default function RootLayout({ children }) {
   return (
     <html lang="en">
       <body>
-        {/* ===== NAVBAR ===== */}
-        <header className="navbar">
-          <div className="nav-container">
-            {/* left: logo + brand */}
-            <Link className="nav-logo" href="/">
-              <Image src="/quickmed-icon.png" alt="QuickMed Care" width={28} height={28} />
-              <span className="brand">QuickMed Care</span>
-            </Link>
+        <Navbar />
+<FloatingCallButton />
 
-            <nav className="nav-links">
-              <Link href="/">Home</Link>
-              <Link href="/consult">Consult</Link>
-              <Link href="/book">Book</Link>
-              <a href="#about">About</a>
-              <Link href="/contact">Contact</Link>
-            </nav>
-          </div>
-        </header>
-
-        {/* page content */}
         <main className="page-content">{children}</main>
 
-        {/* ===== FOOTER ===== */}
         <footer className="site-footer" id="about">
           <div className="footer-inner">
             <h3>About QuickMed Care</h3>
@@ -62,12 +42,7 @@ export default function RootLayout({ children }) {
             </p>
 
             <div id="contact" className="contact">
-              <strong>Contact:</strong>{" "}
-              <a href="mailto:hello@quickmed.care">hello@quickmed.care</a>
-              {" · "}
-              <Link href="/privacy">Privacy</Link>
-              {" · "}
-              <Link href="/terms">Terms</Link>
+              <strong>Contact:</strong> hello@quickmed-care.com
             </div>
           </div>
         </footer>
