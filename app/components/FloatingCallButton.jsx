@@ -1,8 +1,10 @@
+import FloatingCallButton from "./components/FloatingCallButton";
+
 // app/components/FloatingCallButton.jsx
 export default function FloatingCallButton() {
   return (
     <a
-      href="tel:+2348012345678"   // 👉 Replace with your real ambulance number
+      href="tel:+2348169037959"   // 👉 Replace with your real ambulance number
       className="call-ambulance"
       aria-label="Call Ambulance Service"
     >
