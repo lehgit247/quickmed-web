@@ -1,13 +1,14 @@
-import FloatingCallButton from "./components/FloatingCallButton";
-
 // app/components/FloatingCallButton.jsx
+// Server component (no hooks), safe to use in layout
+
 export default function FloatingCallButton() {
   return (
     <a
-      href="tel:+2348169037959"   // 👉 Replace with your real ambulance number
+      href="tel:+2348169037959"  // ← put your real ambulance number here
       className="call-ambulance"
       aria-label="Call Ambulance Service"
     >
+      {/* phone handset icon (white) - inline SVG, no extra deps */}
       <svg
         xmlns="http://www.w3.org/2000/svg"
         fill="white"
