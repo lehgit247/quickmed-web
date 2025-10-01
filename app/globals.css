@@ -834,3 +834,518 @@ body { margin: 0; font-family: Arial, sans-serif; }
 
 /* Optional: make sure nothing on the page hides it */
 body { position: relative; }
+/* Consult Page Enhanced Styles */
+.consult-options {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.option-btn {
+  flex: 1;
+  padding: 0.75rem;
+  border: 2px solid #e2e8f0;
+  background: white;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s;
+  font-size: 0.9rem;
+}
+
+.option-btn.active,
+.option-btn:hover {
+  border-color: #3498db;
+  background: #3498db;
+  color: white;
+  transform: translateY(-2px);
+}
+
+select {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  font-size: 1rem;
+  margin-top: 0.5rem;
+  background: white;
+}
+
+.consult-type-badge {
+  display: inline-block;
+  background: #e3f2fd;
+  color: #1976d2;
+  padding: 0.25rem 0.75rem;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  margin-top: 0.5rem;
+  font-weight: 500;
+}
+
+/* Enhanced card styles */
+.card {
+  background: white;
+  border-radius: 12px;
+  padding: 2rem;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+  border: 1px solid #e2e8f0;
+}
+
+.match-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.match-icon {
+  border-radius: 8px;
+}
+
+.match-name {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #1a202c;
+}
+
+.match-sub {
+  color: #718096;
+  font-size: 0.9rem;
+  margin-top: 0.25rem;
+}
+
+.match-summary {
+  background: #f7fafc;
+  padding: 1rem;
+  border-radius: 8px;
+  margin: 1.5rem 0;
+}
+
+.match-summary .label {
+  font-weight: 600;
+  color: #4a5568;
+  margin-bottom: 0.5rem;
+}
+
+.match-summary .text {
+  color: #2d3748;
+  line-height: 1.5;
+}
+
+.row {
+  display: flex;
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+
+.btn {
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  font-weight: 500;
+  text-decoration: none;
+  text-align: center;
+  transition: all 0.3s;
+  border: none;
+  cursor: pointer;
+  flex: 1;
+}
+
+.btn-primary {
+  background: #3498db;
+  color: white;
+}
+
+.btn-primary:hover {
+  background: #2980b9;
+  transform: translateY(-2px);
+}
+
+.btn-ghost {
+  background: transparent;
+  color: #4a5568;
+  border: 1px solid #e2e8f0;
+}
+
+.btn-ghost:hover {
+  background: #f7fafc;
+  border-color: #cbd5e0;
+}
+
+.tiny {
+  font-size: 0.75rem;
+  color: #718096;
+  text-align: center;
+  margin-top: 1rem;
+  font-style: italic;
+}
+
+.error {
+  color: #e53e3e;
+  background: #fed7d7;
+  padding: 0.75rem;
+  border-radius: 8px;
+  margin: 1rem 0;
+  border: 1px solid #feb2b2;
+}
+
+.container {
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 2rem 1rem;
+}
+
+.consult-title {
+  text-align: center;
+  font-size: 2rem;
+  font-weight: 700;
+  color: #1a202c;
+  margin-bottom: 2rem;
+}
+
+label {
+  display: block;
+  margin-bottom: 1.5rem;
+  font-weight: 500;
+  color: #4a5568;
+}
+
+input, textarea {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  font-size: 1rem;
+  margin-top: 0.5rem;
+  transition: border-color 0.3s;
+}
+
+input:focus, textarea:focus {
+  outline: none;
+  border-color: #3498db;
+  box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+}
+/* ePrescription Styles */
+.prescription-card {
+  max-width: 800px;
+  background: white;
+  border: 2px solid #1a365d;
+  border-radius: 12px;
+  padding: 2rem;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+}
+
+.prescription-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 3px double #1a365d;
+  padding-bottom: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.prescription-logo {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.prescription-logo h2 {
+  color: #1a365d;
+  margin: 0;
+  font-size: 1.5rem;
+}
+
+.prescription-logo p {
+  color: #718096;
+  margin: 0;
+  font-size: 0.9rem;
+}
+
+.prescription-id {
+  background: #e6fffa;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  border: 1px solid #81e6d9;
+  font-family: monospace;
+}
+
+.prescription-info {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2rem;
+  margin-bottom: 2rem;
+}
+
+.patient-info, .doctor-info {
+  background: #f7fafc;
+  padding: 1rem;
+  border-radius: 8px;
+  border-left: 4px solid #3498db;
+}
+
+.patient-info h3, .doctor-info h3 {
+  color: #2d3748;
+  margin-top: 0;
+  margin-bottom: 1rem;
+  font-size: 1.1rem;
+}
+
+.medications-section {
+  margin-bottom: 2rem;
+}
+
+.medications-section h3 {
+  color: #2d3748;
+  border-bottom: 2px solid #e2e8f0;
+  padding-bottom: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.medications-table {
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.table-header {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr 1fr 1.5fr;
+  background: #1a365d;
+  color: white;
+  font-weight: 600;
+  padding: 1rem;
+  gap: 0.5rem;
+}
+
+.table-row {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr 1fr 1.5fr;
+  padding: 1rem;
+  gap: 0.5rem;
+  border-bottom: 1px solid #e2e8f0;
+  align-items: start;
+}
+
+.table-row:last-child {
+  border-bottom: none;
+}
+
+.table-row:nth-child(even) {
+  background: #f7fafc;
+}
+
+.prescription-footer {
+  border-top: 2px solid #e2e8f0;
+  padding-top: 1.5rem;
+  margin-top: 2rem;
+}
+
+.instructions, .follow-up {
+  margin-bottom: 1.5rem;
+}
+
+.instructions h4, .follow-up h4 {
+  color: #2d3748;
+  margin-bottom: 0.5rem;
+}
+
+.signature {
+  text-align: center;
+  margin-top: 2rem;
+  padding-top: 1rem;
+  border-top: 1px solid #e2e8f0;
+}
+
+.signature-line {
+  width: 300px;
+  height: 1px;
+  background: #2d3748;
+  margin: 0 auto 1rem;
+}
+
+.signature p {
+  margin: 0.25rem 0;
+}
+
+.prescription-actions {
+  display: flex;
+  gap: 1rem;
+  margin-top: 2rem;
+  flex-wrap: wrap;
+}
+
+.btn-secondary {
+  background: #27ae60;
+  color: white;
+  border: none;
+}
+
+.btn-secondary:hover {
+  background: #219653;
+  transform: translateY(-2px);
+}
+
+.match-diagnosis, .match-advice {
+  background: #f0fff4;
+  padding: 1rem;
+  border-radius: 8px;
+  margin: 1rem 0;
+  border-left: 4px solid #48bb78;
+}
+
+.match-diagnosis .label, .match-advice .label {
+  font-weight: 600;
+  color: #2f855a;
+  margin-bottom: 0.5rem;
+}
+
+/* Print styles for prescription */
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  .prescription-card,
+  .prescription-card * {
+    visibility: visible;
+  }
+  .prescription-card {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    box-shadow: none;
+    border: none;
+  }
+  .prescription-actions {
+    display: none;
+  }
+}
+/* Travel Mode Styles */
+.travel-mode-toggle {
+  background: #fff3cd;
+  border: 2px solid #ffeaa7;
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.travel-mode-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 600;
+  color: #856404;
+  margin-bottom: 1rem;
+  font-size: 1.1rem;
+}
+
+.travel-icon {
+  font-size: 1.5rem;
+}
+
+.toggle-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.toggle-label {
+  color: #856404;
+  font-weight: 500;
+}
+
+/* Toggle Switch */
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 60px;
+  height: 34px;
+}
+
+.switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #ccc;
+  transition: .4s;
+  border-radius: 34px;
+}
+
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 26px;
+  width: 26px;
+  left: 4px;
+  bottom: 4px;
+  background-color: white;
+  transition: .4s;
+  border-radius: 50%;
+}
+
+input:checked + .slider {
+  background-color: #27ae60;
+}
+
+input:checked + .slider:before {
+  transform: translateX(26px);
+}
+
+.travel-mode-options {
+  background: white;
+  padding: 1rem;
+  border-radius: 8px;
+  border: 1px solid #ffeaa7;
+  margin-top: 1rem;
+  animation: slideDown 0.3s ease-out;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Travel Mode Badge in Results */
+.travel-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: #d4edda;
+  color: #155724;
+  padding: 0.5rem 1rem;
+  border-radius: 20px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  margin-top: 0.5rem;
+}
+
+.travel-features {
+  background: #e8f5e8;
+  border: 1px solid #c3e6cb;
+  border-radius: 8px;
+  padding: 1rem;
+  margin: 1rem 0;
+}
+
+.travel-feature {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0.5rem 0;
+  color: #155724;
+}
