@@ -1349,3 +1349,271 @@ input:checked + .slider:before {
   margin: 0.5rem 0;
   color: #155724;
 }
+/* Emergency Page Styles */
+.emergency {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 2rem 1rem;
+}
+
+.emergency-header {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.emergency-title {
+  font-size: 2.5rem;
+  color: #e74c3c;
+  margin-bottom: 0.5rem;
+  font-weight: 700;
+}
+
+.emergency-subtitle {
+  font-size: 1.2rem;
+  color: #7f8c8d;
+  margin-bottom: 2rem;
+}
+
+/* SOS Button */
+.sos-section {
+  text-align: center;
+  margin-bottom: 3rem;
+}
+
+.sos-button {
+  background: linear-gradient(135deg, #e74c3c, #c0392b);
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 200px;
+  height: 200px;
+  font-size: 1.2rem;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 1rem;
+  position: relative;
+  transition: all 0.3s;
+  box-shadow: 0 8px 25px rgba(231, 76, 60, 0.3);
+}
+
+.sos-button:hover {
+  transform: scale(1.05);
+  box-shadow: 0 12px 35px rgba(231, 76, 60, 0.5);
+}
+
+.sos-pulse {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background: rgba(231, 76, 60, 0.6);
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1.3);
+    opacity: 0;
+  }
+}
+
+.sos-text {
+  font-size: 1.5rem;
+  margin-bottom: 0.5rem;
+  z-index: 2;
+}
+
+.sos-subtext {
+  font-size: 0.9rem;
+  opacity: 0.9;
+  z-index: 2;
+}
+
+.sos-warning {
+  color: #e74c3c;
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+/* Contacts Section */
+.contacts-section {
+  margin-bottom: 3rem;
+}
+
+.contacts-section h2 {
+  color: #2c3e50;
+  margin-bottom: 1.5rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 2px solid #ecf0f1;
+}
+
+.contacts-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 1.5rem;
+}
+
+.contact-card {
+  background: white;
+  border-radius: 12px;
+  padding: 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  border-left: 4px solid #3498db;
+  transition: transform 0.3s;
+}
+
+.contact-card:hover {
+  transform: translateY(-5px);
+}
+
+.contact-card.police {
+  border-left-color: #3498db;
+}
+
+.contact-card.fire {
+  border-left-color: #e74c3c;
+}
+
+.contact-card.ambulance {
+  border-left-color: #27ae60;
+}
+
+.contact-card.traffic {
+  border-left-color: #f39c12;
+}
+
+.contact-card.hospital {
+  border-left-color: #9b59b6;
+}
+
+.contact-card.embassy {
+  border-left-color: #1abc9c;
+}
+
+.contact-card.quickmed {
+  border-left-color: #e74c3c;
+}
+
+.contact-icon {
+  font-size: 2rem;
+  flex-shrink: 0;
+}
+
+.contact-info {
+  flex: 1;
+}
+
+.contact-info h3 {
+  margin: 0 0 0.5rem 0;
+  color: #2c3e50;
+  font-size: 1.1rem;
+}
+
+.contact-info p {
+  margin: 0;
+  color: #7f8c8d;
+  font-size: 0.9rem;
+}
+
+.call-button {
+  background: #27ae60;
+  color: white;
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  text-decoration: none;
+  font-weight: 600;
+  transition: background 0.3s;
+  flex-shrink: 0;
+}
+
+.call-button:hover {
+  background: #219653;
+  color: white;
+}
+
+/* Emergency Instructions */
+.emergency-instructions {
+  background: #f8f9fa;
+  border-radius: 12px;
+  padding: 2rem;
+  margin-bottom: 2rem;
+}
+
+.emergency-instructions h3 {
+  color: #2c3e50;
+  margin-bottom: 1.5rem;
+  text-align: center;
+}
+
+.instructions-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1.5rem;
+}
+
+.instruction {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+}
+
+.instruction-number {
+  background: #3498db;
+  color: white;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.instruction p {
+  margin: 0;
+  color: #2c3e50;
+  line-height: 1.5;
+}
+
+.emergency-footer {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .emergency-title {
+    font-size: 2rem;
+  }
+  
+  .sos-button {
+    width: 150px;
+    height: 150px;
+  }
+  
+  .sos-text {
+    font-size: 1.2rem;
+  }
+  
+  .contacts-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .emergency-footer {
+    flex-direction: column;
+  }
+}

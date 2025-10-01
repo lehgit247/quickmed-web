@@ -344,7 +344,7 @@ export default function ConsultPage() {
             <div className="label">Your summary:</div>
             <div className="text">{match.caseSummary}</div>
           </div>
-          
+
 {match.travelMode && (
   <div className="travel-features">
     <h4>🌍 Traveler Benefits Activated</h4>
@@ -394,15 +394,16 @@ export default function ConsultPage() {
           </div>
 
           <div className="tiny">
-            Not an emergency? If this worsens, please dial local emergency services.
-          </div>
+  Not an emergency? If this worsens, please dial local emergency services.
+</div>
 
-          <div className="row">
-            <button className="btn btn-ghost" onClick={reset}>Start Over</button>
-            <button className="btn btn-ghost" onClick={() => setShowPrescription(true)}>
-              View Sample Prescription
-            </button>
-          </div>
+{/* 🎯 THIS IS THE MODIFIED SECTION */}
+<div className="row">
+  <button className="btn btn-ghost" onClick={reset}>Start Over</button>
+  <Link href="/emergency" className="btn btn-ghost" style={{background: '#fee', color: '#e74c3c', borderColor: '#e74c3c'}}>
+    🚨 Emergency Contacts
+  </Link>
+</div>
         </div>
       )}
     </section>
