@@ -1,52 +1,80 @@
-// app/components/Navbar.jsx
 "use client";
-
-import Link from "next/link";
-import Image from "next/image";
 import { useState } from "react";
+import Link from "next/link";
 import { FiMenu, FiX } from "react-icons/fi";
+
+// Simple language switcher component
+function LanguageSwitcher() {
+  const [language, setLanguage] = useState('en');
+
+  const languages = [
+    { code: 'en', name: 'English', flag: '🇺🇸' },
+    { code: 'fr', name: 'French', flag: '🇫🇷' },
+    { code: 'es', name: 'Spanish', flag: '🇪🇸' },
+    { code: 'ar', name: 'Arabic', flag: '🇸🇦' },
+    { code: 'pt', name: 'Portuguese', flag: '🇵🇹' }
+  ];
+
+  return (
+    <div className="language-switcher">
+      <select 
+        value={language} 
+        onChange={(e) => setLanguage(e.target.value)}
+        className="language-select"
+      >
+        {languages.map((lang) => (
+          <option key={lang.code} value={lang.code}>
+            {lang.flag} {lang.name}
+          </option>
+        ))}
+      </select>
+    </div>
+  );
+}
 
 export default function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false);
-
+  
   return (
-    <header className="navbar">
-      <div className="nav-container">
-        {/* Brand */}
-        <Link className="nav-logo" href="/">
-          <Image src="/quickmed-icon.png" alt="QuickMed Care" width={28} height={28} />
-          <span className="brand">QuickMed Care</span>
+    <header>
+      {/* Desktop Nav */}
+      <nav className="navbar">
+        <Link href="/" className="navbar-logo">
+          QuickMed Care
         </Link>
-
-        {/* Desktop links */}
-        <nav className="nav-links">
+        
+        <div className="nav-links">
           <Link href="/">Home</Link>
           <Link href="/consult">Consult</Link>
           <Link href="/book">Book</Link>
-          <a href="#about">About</a>
-          <a href="#contact">Contact</a>
-        </nav>
-
-        {/* Mobile hamburger */}
-        <button
-          className="hamburger"
-          aria-label={menuOpen ? "Close menu" : "Open menu"}
-          onClick={() => setMenuOpen((v) => !v)}
-        >
-          {menuOpen ? <FiX size={28} /> : <FiMenu size={28} />}
-        </button>
-      </div>
-
-      {/* Mobile dropdown */}
-      {menuOpen && (
-        <div className="mobile-menu">
-          <Link href="/" onClick={() => setMenuOpen(false)}>Home</Link>
-          <Link href="/consult" onClick={() => setMenuOpen(false)}>Consult</Link>
-          <Link href="/book" onClick={() => setMenuOpen(false)}>Book</Link>
-          <a href="#about" onClick={() => setMenuOpen(false)}>About</a>
-          <a href="#contact" onClick={() => setMenuOpen(false)}>Contact</a>
+          <Link href="/emergency">🚨 Emergency</Link>
+          <Link href="/contact">Contact</Link>
+          <LanguageSwitcher />
         </div>
-      )}
+
+        {/* Mobile Hamburger */}
+        <button 
+          className="menu-btn" 
+          onClick={() => setMenuOpen(!menuOpen)}
+          aria-label="Toggle menu"
+        >
+          {menuOpen ? <FiX color="black" /> : <FiMenu color="black" />}
+        </button>
+
+        {/* Mobile Menu */}
+        {menuOpen && (
+          <div className="mobile-menu">
+            <Link href="/" onClick={() => setMenuOpen(false)}>Home</Link>
+            <Link href="/consult" onClick={() => setMenuOpen(false)}>Consult</Link>
+            <Link href="/book" onClick={() => setMenuOpen(false)}>Book</Link>
+            <Link href="/emergency" onClick={() => setMenuOpen(false)}>🚨 Emergency</Link>
+            <Link href="/contact" onClick={() => setMenuOpen(false)}>Contact</Link>
+            <div className="mobile-language">
+              <LanguageSwitcher />
+            </div>
+          </div>
+        )}
+      </nav>
     </header>
   );
 }
