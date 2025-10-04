@@ -2,7 +2,14 @@
 import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { useLanguage } from '../context/LanguageContext'; // ← This import exists
 
+export default function ConsultPage() {
+  const { language } = useLanguage(); // ← This line exists
+  const t = translations[language] || translations.en;
+  
+  // ... rest of your code
+}
 // Translations dictionary
 const translations = {
   en: {

@@ -2,10 +2,11 @@
 import { useState } from "react";
 import Link from "next/link";
 import { FiMenu, FiX } from "react-icons/fi";
+import { useLanguage } from '../context/LanguageContext';
 
-// Simple language switcher component
+// Language switcher component - NOW USING SHARED CONTEXT
 function LanguageSwitcher() {
-  const [language, setLanguage] = useState('en');
+  const { language, setLanguage } = useLanguage();
 
   const languages = [
     { code: 'en', name: 'English', flag: '🇺🇸' },
@@ -15,11 +16,17 @@ function LanguageSwitcher() {
     { code: 'pt', name: 'Portuguese', flag: '🇵🇹' }
   ];
 
+  const handleLanguageChange = (e) => {
+    const newLanguage = e.target.value;
+    setLanguage(newLanguage);
+    console.log("Language changed to:", newLanguage);
+  };
+
   return (
     <div className="language-switcher">
       <select 
         value={language} 
-        onChange={(e) => setLanguage(e.target.value)}
+        onChange={handleLanguageChange}
         className="language-select"
       >
         {languages.map((lang) => (
@@ -53,18 +60,18 @@ export default function Navbar() {
         </div>
 
         {/* Mobile Language Switcher - LEFT SIDE */}
-<div className="mobile-language-top">
-  <LanguageSwitcher />
-</div>
+        <div className="mobile-language-top">
+          <LanguageSwitcher />
+        </div>
 
-{/* Mobile Hamburger */}
-<button 
-  className="menu-btn" 
-  onClick={() => setMenuOpen(!menuOpen)}
-  aria-label="Toggle menu"
->
-  {menuOpen ? <FiX color="black" /> : <FiMenu color="black" />}
-</button>
+        {/* Mobile Hamburger */}
+        <button 
+          className="menu-btn" 
+          onClick={() => setMenuOpen(!menuOpen)}
+          aria-label="Toggle menu"
+        >
+          {menuOpen ? <FiX color="black" /> : <FiMenu color="black" />}
+        </button>
 
         {/* Mobile Menu */}
         {menuOpen && (
