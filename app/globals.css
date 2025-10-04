@@ -1629,6 +1629,7 @@ input:checked + .slider:before {
   font-size: 0.9rem;
   cursor: pointer;
   transition: all 0.3s;
+  color: black;
 }
 
 .language-select:focus {
@@ -1784,5 +1785,25 @@ input:checked + .slider:before {
   
   .language-select {
     width: 100%;
+  }
+}
+/* Mobile Language Switcher - Top Position */
+.mobile-language-top {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .mobile-language-top {
+    display: block;
+    margin-right: 1rem;
+  }
+  
+  .mobile-language-top .language-select {
+    color: black;
+    background: white;
+    border: 1px solid #e2e8f0;
+    padding: 0.5rem;
+    border-radius: 6px;
+    font-size: 0.9rem;
   }
 }

@@ -52,14 +52,19 @@ export default function Navbar() {
           <LanguageSwitcher />
         </div>
 
-        {/* Mobile Hamburger */}
-        <button 
-          className="menu-btn" 
-          onClick={() => setMenuOpen(!menuOpen)}
-          aria-label="Toggle menu"
-        >
-          {menuOpen ? <FiX color="black" /> : <FiMenu color="black" />}
-        </button>
+        {/* Mobile Language Switcher - LEFT SIDE */}
+<div className="mobile-language-top">
+  <LanguageSwitcher />
+</div>
+
+{/* Mobile Hamburger */}
+<button 
+  className="menu-btn" 
+  onClick={() => setMenuOpen(!menuOpen)}
+  aria-label="Toggle menu"
+>
+  {menuOpen ? <FiX color="black" /> : <FiMenu color="black" />}
+</button>
 
         {/* Mobile Menu */}
         {menuOpen && (
