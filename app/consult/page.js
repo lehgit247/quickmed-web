@@ -2,14 +2,8 @@
 import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { useLanguage } from '../context/LanguageContext'; // ← This import exists
+import { useLanguage } from '../context/LanguageContext';
 
-export default function ConsultPage() {
-  const { language } = useLanguage(); // ← This line exists
-  const t = translations[language] || translations.en;
-  
-  // ... rest of your code
-}
 // Translations dictionary
 const translations = {
   en: {
@@ -231,12 +225,6 @@ const translations = {
     englishStaff: "Hospital con personal que habla inglés"
   }
 };
-
-// Simple language context (we'll use a simple state since we don't have the full context setup yet)
-function useLanguage() {
-  const [language, setLanguage] = useState('en');
-  return { language, setLanguage };
-}
 
 export default function ConsultPage() {
   const { language } = useLanguage();
