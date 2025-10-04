@@ -1595,7 +1595,7 @@ input:checked + .slider:before {
 }
 
 /* Responsive Design */
-@media (max-width: 768px) {
+
   .emergency-title {
     font-size: 2rem;
   }
