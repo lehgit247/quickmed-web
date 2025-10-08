@@ -37,7 +37,9 @@ const translations = {
     cardiology: "Cardiology",
     dermatology: "Dermatology",
     emergencyMedicine: "Emergency Medicine",
-    
+    gynecology: "Gynecology", 
+    neurosurgeon: "Neurosurgeon", 
+    psychiatrist: "Psychiatrist",  
     // Consultation Types
     chat: "Chat",
     voiceCall: "Voice Call", 
@@ -110,6 +112,9 @@ const translations = {
     cardiology: "Cardiologie",
     dermatology: "Dermatologie",
     emergencyMedicine: "Médecine d'Urgence",
+    gynecology: "Gynécologie",
+    neurosurgeon: "Neurochirurgien",
+    psychiatrist: "Psychiatre",
     
     // Consultation Types
     chat: "Chat",
@@ -183,6 +188,9 @@ const translations = {
     cardiology: "Cardiología",
     dermatology: "Dermatología",
     emergencyMedicine: "Medicina de Emergencia",
+    gynecology: "Ginecología",
+    neurosurgeon: "Neurocirujano",
+    psychiatrist: "Psiquiatra",
     
     // Consultation Types
     chat: "Chat",
@@ -269,6 +277,9 @@ export default function ConsultPage() {
       { name: "Dr. Zainab Bello", specialty: t.emergencyMedicine, rating: "4.9", eta: "~1–3 min", license: "MD, FWACS" },
       { name: "Dr. Ahmed Musa", specialty: t.cardiology, rating: "4.8", eta: "~4–7 min", license: "MD, FMCP" },
       { name: "Dr. Grace Okafor", specialty: t.dermatology, rating: "4.6", eta: "~3–6 min", license: "MD, FMCD" },
+      { name: "Dr. Fatima Abdul", specialty: t.gynecology, rating: "4.8", eta: "~4–7 min", license: "MD, FMCOG" },
+      { name: "Dr. Micheal Musa", specialty: t.neurosurgeon, rating: "4.7", eta: "~4–7 min", license: "MD, FRCS" },
+      { name: "Dr. Patrick Abel", specialty: t.psychiatrist, rating: "4.9", eta: "~3–6 min", license: "MD, APAF" },
     ];
 
     // Filter doctors by specialty if selected
@@ -412,6 +423,9 @@ export default function ConsultPage() {
               <option value="cardiology">{t.cardiology}</option>
               <option value="dermatology">{t.dermatology}</option>
               <option value="emergency">{t.emergencyMedicine}</option>
+              <option value="gynecology">{t.gynecology}</option>
+              <option value="neurosurgeon">{t.neurosurgeon}</option>
+              <option value="psychiatrist">{t.psychiatrist}</option>
             </select>
           </label>
 
