@@ -13,6 +13,10 @@ const translations = {
     book: "Book", 
     emergency: "Emergency",
     contact: "Contact",
+    insuranceProvider: "Insurance Provider",
+  selectInsurance: "Select your insurance", 
+  noInsurance: "No insurance",
+  insuranceNote: "We'll help verify coverage with your provider",
     
     // Consult Page
     quickConsultation: "Quick Consultation",
@@ -88,6 +92,10 @@ const translations = {
     book: "Réserver",
     emergency: "Urgence", 
     contact: "Contact",
+    insuranceProvider: "Assureur",
+  selectInsurance: "Sélectionnez votre assurance", 
+  noInsurance: "Pas d'assurance",
+  insuranceNote: "Nous vous aiderons à vérifier la couverture avec votre assureur",
     
     // Consult Page
     quickConsultation: "Consultation Rapide",
@@ -164,6 +172,11 @@ const translations = {
     book: "Reservar",
     emergency: "Emergencia",
     contact: "Contacto",
+      insuranceProvider: "Aseguradora",
+  selectInsurance: "Seleccione su seguro", 
+  noInsurance: "Sin seguro",
+  insuranceNote: "Le ayudaremos a verificar la cobertura con su aseguradora",
+
     
     // Consult Page  
     quickConsultation: "Consulta Rápida",
@@ -247,7 +260,8 @@ export default function ConsultPage() {
     consultationType: "chat",
     travelMode: false,
     language: "",
-    homeCountry: ""
+    homeCountry: "",
+    insuranceProvider: "", 
   });
   const [error, setError] = useState("");
   const [match, setMatch] = useState(null);
@@ -409,6 +423,52 @@ export default function ConsultPage() {
                     placeholder="e.g., United States"
                   />
                 </label>
+                    {/* 🆕 ADD INSURANCE SECTION START */}
+    <label>
+      {t.insuranceProvider}
+      <select name="insuranceProvider" value={form.insuranceProvider || ''} onChange={onChange}>
+        <option value="">{t.selectInsurance}</option>
+        <option value="none">{t.noInsurance}</option>
+        <optgroup label="United States">
+          <option value="unitedhealthcare">UnitedHealthcare</option>
+          <option value="anthem">Anthem Blue Cross</option>
+          <option value="aetna">Aetna</option>
+          <option value="cigna">Cigna</option>
+          <option value="humana">Humana</option>
+          <option value="kaiser">Kaiser Permanente</option>
+        </optgroup>
+        <optgroup label="United Kingdom">
+          <option value="bupa">BUPA International</option>
+          <option value="axa">AXA PPP Healthcare</option>
+          <option value="aviva">Aviva</option>
+          <option value="vitality">VitalityHealth</option>
+        </optgroup>
+        <optgroup label="Europe">
+          <option value="allianz">Allianz Care</option>
+          <option value="generali">Generali</option>
+          <option value="zurich">Zurich Insurance</option>
+          <option value="mapfre">MAPFRE</option>
+        </optgroup>
+        <optgroup label="Canada">
+          <option value="manulife">Manulife</option>
+          <option value="sunlife">Sun Life Financial</option>
+          <option value="greatwest">Great-West Life</option>
+        </optgroup>
+        <optgroup label="Australia">
+          <option value="bupa-au">BUPA Australia</option>
+          <option value="medibank">Medibank</option>
+          <option value="nib">nib Health Insurance</option>
+        </optgroup>
+        <optgroup label="International">
+          <option value="cigna-global">Cigna Global</option>
+          <option value="allianz-worldwide">Allianz Worldwide Care</option>
+          <option value="aetna-intl">Aetna International</option>
+          <option value="now-health">Now Health International</option>
+        </optgroup>
+      </select>
+      <small className="insurance-note">{t.insuranceNote}</small>
+    </label>
+    {/* 🆕 ADD INSURANCE SECTION END */}
               </div>
             )}
           </label>
