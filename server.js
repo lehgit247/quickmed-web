@@ -1,7 +1,6 @@
 const mongoose = require('mongoose');
 
-// 🎯 USE THE DIRECT PASSWORD (no .env troubles!)
-const MONGODB_URI = "mongodb+srv://eyamfrank2_db_user:HjEbPjDybW1aZi8E@patient-doctor-platform.lek8y9l.mongodb.net/patient_doctor_platform?retryWrites=true&w=majority&appName=patient-doctor-platform";
+const MONGODB_URI = "mongodb+srv://eyamfrank2_db_user:hfoIVQPdhLlHe1K1@patient-doctor-platform.lek8y9l.mongodb.net/patient_doctor_platform?retryWrites=true&w=majority&appName=patient-doctor-platform";
 
 console.log('📞 Calling database...');
 

@@ -1185,16 +1185,16 @@ input:focus, textarea:focus {
 }
 
 .match-diagnosis, .match-advice {
-  background: #f0fff4;
+  background: #0aa6e4;
   padding: 1rem;
   border-radius: 8px;
   margin: 1rem 0;
-  border-left: 4px solid #48bb78;
+  border-left: 4px solid #410c10;
 }
 
 .match-diagnosis .label, .match-advice .label {
   font-weight: 600;
-  color: #2f855a;
+  color: #410c10;
   margin-bottom: 0.5rem;
 }
 
