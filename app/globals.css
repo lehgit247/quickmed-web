@@ -1807,3 +1807,14 @@ input:checked + .slider:before {
     font-size: 0.9rem;
   }
 }
+/* FORCE BLACK TEXT IN PRESCRIPTION */
+.prescription-card {
+  color: #000000 !important;
+}
+
+.prescription-card p,
+.prescription-card span,
+.prescription-card div,
+.prescription-card td {
+  color: #000000 !important;
+}
