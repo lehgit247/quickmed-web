@@ -14,9 +14,9 @@ const translations = {
     emergency: "Emergency",
     contact: "Contact",
     insuranceProvider: "Insurance Provider",
-  selectInsurance: "Select your insurance", 
-  noInsurance: "No insurance",
-  insuranceNote: "We'll help verify coverage with your provider",
+    selectInsurance: "Select your insurance", 
+    noInsurance: "No insurance",
+    insuranceNote: "We'll help verify coverage with your provider",
     
     // Consult Page
     quickConsultation: "Quick Consultation",
@@ -93,9 +93,9 @@ const translations = {
     emergency: "Urgence", 
     contact: "Contact",
     insuranceProvider: "Assureur",
-  selectInsurance: "Sélectionnez votre assurance", 
-  noInsurance: "Pas d'assurance",
-  insuranceNote: "Nous vous aiderons à vérifier la couverture avec votre assureur",
+    selectInsurance: "Sélectionnez votre assurance", 
+    noInsurance: "Pas d'assurance",
+    insuranceNote: "Nous vous aiderons à vérifier la couverture avec votre assureur",
     
     // Consult Page
     quickConsultation: "Consultation Rapide",
@@ -172,10 +172,10 @@ const translations = {
     book: "Reservar",
     emergency: "Emergencia",
     contact: "Contacto",
-      insuranceProvider: "Aseguradora",
-  selectInsurance: "Seleccione su seguro", 
-  noInsurance: "Sin seguro",
-  insuranceNote: "Le ayudaremos a verificar la cobertura con su aseguradora",
+    insuranceProvider: "Aseguradora",
+    selectInsurance: "Seleccione su seguro", 
+    noInsurance: "Sin seguro",
+    insuranceNote: "Le ayudaremos a verificar la cobertura con su aseguradora",
 
     
     // Consult Page  
@@ -285,15 +285,78 @@ export default function ConsultPage() {
     setError("");
 
     const doctors = [
-      { name: "Dr. Ada Okoye", specialty: t.generalPractitioner, rating: "4.9", eta: "~2–5 min", license: "MD, MBBS" },
-      { name: "Dr. Femi Yusuf", specialty: t.internalMedicine, rating: "4.8", eta: "~3–6 min", license: "MD, FWACP" },
-      { name: "Dr. Chike Nwosu", specialty: t.pediatrics, rating: "4.7", eta: "~5–8 min", license: "MD, FMCPaed" },
-      { name: "Dr. Zainab Bello", specialty: t.emergencyMedicine, rating: "4.9", eta: "~1–3 min", license: "MD, FWACS" },
-      { name: "Dr. Ahmed Musa", specialty: t.cardiology, rating: "4.8", eta: "~4–7 min", license: "MD, FMCP" },
-      { name: "Dr. Grace Okafor", specialty: t.dermatology, rating: "4.6", eta: "~3–6 min", license: "MD, FMCD" },
-      { name: "Dr. Fatima Abdul", specialty: t.gynecology, rating: "4.8", eta: "~4–7 min", license: "MD, FMCOG" },
-      { name: "Dr. Micheal Musa", specialty: t.neurosurgeon, rating: "4.7", eta: "~4–7 min", license: "MD, FRCS" },
-      { name: "Dr. Patrick Abel", specialty: t.psychiatrist, rating: "4.9", eta: "~3–6 min", license: "MD, APAF" },
+      { 
+        name: "Dr. Ada Okoye", 
+        specialty: t.generalPractitioner, 
+        rating: "4.9", 
+        eta: "~2–5 min", 
+        license: "MD, MBBS",
+        insurances: ["NHIS", "RedCare", "Avon HMO", "Hygeia"] 
+      },
+      { 
+        name: "Dr. Femi Yusuf", 
+        specialty: t.internalMedicine, 
+        rating: "4.8", 
+        eta: "~3–6 min", 
+        license: "MD, FWACP",
+        insurances: ["NHIS", "Clearline", "Mediplan"] 
+      },
+      { 
+        name: "Dr. Chike Nwosu", 
+        specialty: t.pediatrics, 
+        rating: "4.7", 
+        eta: "~5–8 min", 
+        license: "MD, FMCPaed",
+        insurances: ["NHIS", "RedCare", "Premiere HMO"] 
+      },
+      { 
+        name: "Dr. Zainab Bello", 
+        specialty: t.emergencyMedicine, 
+        rating: "4.9", 
+        eta: "~1–3 min", 
+        license: "MD, FWACS",
+        insurances: ["NHIS", "Avon HMO", "Hygeia", "Anchor HMO"] 
+      },
+      { 
+        name: "Dr. Ahmed Musa", 
+        specialty: t.cardiology, 
+        rating: "4.8", 
+        eta: "~4–7 min", 
+        license: "MD, FMCP",
+        insurances: ["NHIS", "Sterling Health", "Reliance HMO"] 
+      },
+      { 
+        name: "Dr. Grace Okafor", 
+        specialty: t.dermatology, 
+        rating: "4.6", 
+        eta: "~3–6 min", 
+        license: "MD, FMCD",
+        insurances: ["NHIS", "RedCare", "Clearline"] 
+      },
+      { 
+        name: "Dr. Fatima Abdul", 
+        specialty: t.gynecology, 
+        rating: "4.8", 
+        eta: "~4–7 min", 
+        license: "MD, FMCOG",
+        insurances: ["NHIS", "Avon HMO", "Mediplan"] 
+      },
+      { 
+        name: "Dr. Micheal Musa", 
+        specialty: t.neurosurgeon, 
+        rating: "4.7", 
+        eta: "~4–7 min", 
+        license: "MD, FRCS",
+        insurances: ["NHIS", "Hygeia", "Premiere HMO"] 
+      },
+      { 
+        name: "Dr. Patrick Abel", 
+        specialty: t.psychiatrist, 
+        rating: "4.9", 
+        eta: "~3–6 min", 
+        license: "MD, APAF",
+        insurances: ["NHIS", "RedCare", "Avon HMO", "Sterling Health"] 
+      },
     ];
 
     // Filter doctors by specialty if selected
@@ -423,52 +486,52 @@ export default function ConsultPage() {
                     placeholder="e.g., United States"
                   />
                 </label>
-                    {/* 🆕 ADD INSURANCE SECTION START */}
-    <label>
-      {t.insuranceProvider}
-      <select name="insuranceProvider" value={form.insuranceProvider || ''} onChange={onChange}>
-        <option value="">{t.selectInsurance}</option>
-        <option value="none">{t.noInsurance}</option>
-        <optgroup label="United States">
-          <option value="unitedhealthcare">UnitedHealthcare</option>
-          <option value="anthem">Anthem Blue Cross</option>
-          <option value="aetna">Aetna</option>
-          <option value="cigna">Cigna</option>
-          <option value="humana">Humana</option>
-          <option value="kaiser">Kaiser Permanente</option>
-        </optgroup>
-        <optgroup label="United Kingdom">
-          <option value="bupa">BUPA International</option>
-          <option value="axa">AXA PPP Healthcare</option>
-          <option value="aviva">Aviva</option>
-          <option value="vitality">VitalityHealth</option>
-        </optgroup>
-        <optgroup label="Europe">
-          <option value="allianz">Allianz Care</option>
-          <option value="generali">Generali</option>
-          <option value="zurich">Zurich Insurance</option>
-          <option value="mapfre">MAPFRE</option>
-        </optgroup>
-        <optgroup label="Canada">
-          <option value="manulife">Manulife</option>
-          <option value="sunlife">Sun Life Financial</option>
-          <option value="greatwest">Great-West Life</option>
-        </optgroup>
-        <optgroup label="Australia">
-          <option value="bupa-au">BUPA Australia</option>
-          <option value="medibank">Medibank</option>
-          <option value="nib">nib Health Insurance</option>
-        </optgroup>
-        <optgroup label="International">
-          <option value="cigna-global">Cigna Global</option>
-          <option value="allianz-worldwide">Allianz Worldwide Care</option>
-          <option value="aetna-intl">Aetna International</option>
-          <option value="now-health">Now Health International</option>
-        </optgroup>
-      </select>
-      <small className="insurance-note">{t.insuranceNote}</small>
-    </label>
-    {/* 🆕 ADD INSURANCE SECTION END */}
+                {/* 🆕 ADD INSURANCE SECTION START */}
+                <label>
+                  {t.insuranceProvider}
+                  <select name="insuranceProvider" value={form.insuranceProvider || ''} onChange={onChange}>
+                    <option value="">{t.selectInsurance}</option>
+                    <option value="none">{t.noInsurance}</option>
+                    <optgroup label="United States">
+                      <option value="unitedhealthcare">UnitedHealthcare</option>
+                      <option value="anthem">Anthem Blue Cross</option>
+                      <option value="aetna">Aetna</option>
+                      <option value="cigna">Cigna</option>
+                      <option value="humana">Humana</option>
+                      <option value="kaiser">Kaiser Permanente</option>
+                    </optgroup>
+                    <optgroup label="United Kingdom">
+                      <option value="bupa">BUPA International</option>
+                      <option value="axa">AXA PPP Healthcare</option>
+                      <option value="aviva">Aviva</option>
+                      <option value="vitality">VitalityHealth</option>
+                    </optgroup>
+                    <optgroup label="Europe">
+                      <option value="allianz">Allianz Care</option>
+                      <option value="generali">Generali</option>
+                      <option value="zurich">Zurich Insurance</option>
+                      <option value="mapfre">MAPFRE</option>
+                    </optgroup>
+                    <optgroup label="Canada">
+                      <option value="manulife">Manulife</option>
+                      <option value="sunlife">Sun Life Financial</option>
+                      <option value="greatwest">Great-West Life</option>
+                    </optgroup>
+                    <optgroup label="Australia">
+                      <option value="bupa-au">BUPA Australia</option>
+                      <option value="medibank">Medibank</option>
+                      <option value="nib">nib Health Insurance</option>
+                    </optgroup>
+                    <optgroup label="International">
+                      <option value="cigna-global">Cigna Global</option>
+                      <option value="allianz-worldwide">Allianz Worldwide Care</option>
+                      <option value="aetna-intl">Aetna International</option>
+                      <option value="now-health">Now Health International</option>
+                    </optgroup>
+                  </select>
+                  <small className="insurance-note">{t.insuranceNote}</small>
+                </label>
+                {/* 🆕 ADD INSURANCE SECTION END */}
               </div>
             )}
           </label>
@@ -638,6 +701,16 @@ export default function ConsultPage() {
                   🧳 Travel Mode • Language: {match.language}
                 </div>
               )}
+            </div>
+          </div>
+
+          {/* 🆕 INSURANCE SECTION ADDED HERE */}
+          <div className="insurance-section">
+            <p className="insurance-label">Accepts Insurance:</p>
+            <div className="insurance-badges">
+              {match.insurances?.map((insurance, index) => (
+                <span key={index} className="insurance-badge">{insurance}</span>
+              ))}
             </div>
           </div>
 
