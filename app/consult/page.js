@@ -486,7 +486,6 @@ export default function ConsultPage() {
                     placeholder="e.g., United States"
                   />
                 </label>
-                {/* 🆕 ADD INSURANCE SECTION START */}
                 <label>
                   {t.insuranceProvider}
                   <select name="insuranceProvider" value={form.insuranceProvider || ''} onChange={onChange}>
@@ -531,7 +530,6 @@ export default function ConsultPage() {
                   </select>
                   <small className="insurance-note">{t.insuranceNote}</small>
                 </label>
-                {/* 🆕 ADD INSURANCE SECTION END */}
               </div>
             )}
           </label>
@@ -597,91 +595,6 @@ export default function ConsultPage() {
             <Link href="/" className="btn btn-ghost">{t.backHome}</Link>
           </div>
         </form>
-      ) : showPrescription ? (
-        <div className="card prescription-card">
-          <div className="prescription-header">
-            <div className="prescription-logo">
-              <Image src="/quickmed-icon.png" alt="QuickMed Care" width={50} height={50} />
-              <div>
-                <h2>QuickMed Care</h2>
-                <p>Digital Health Platform</p>
-              </div>
-            </div>
-            <div className="prescription-id">
-              <strong>Prescription ID:</strong> {prescriptionData.prescriptionId}
-            </div>
-          </div>
-
-          <div className="prescription-info">
-            <div className="patient-info">
-              <h3>Patient Information</h3>
-              <p><strong>Name:</strong> {prescriptionData.patientName}</p>
-              <p><strong>Age:</strong> {prescriptionData.patientAge} years</p>
-              <p><strong>Gender:</strong> {prescriptionData.patientGender}</p>
-              <p><strong>Date:</strong> {prescriptionData.date}</p>
-            </div>
-            
-            <div className="doctor-info">
-              <h3>Prescribing Doctor</h3>
-              <p><strong>Name:</strong> {prescriptionData.doctor}</p>
-              <p><strong>License:</strong> {prescriptionData.doctorLicense}</p>
-              <p><strong>Diagnosis:</strong> {prescriptionData.diagnosis}</p>
-            </div>
-          </div>
-
-          <div className="medications-section">
-            <h3>Medications Prescribed</h3>
-            <div className="medications-table">
-              <div className="table-header">
-                <div>Medication</div>
-                <div>Dosage</div>
-                <div>Frequency</div>
-                <div>Duration</div>
-                <div>Notes</div>
-              </div>
-              {prescriptionData.medications.map((med, index) => (
-                <div key={index} className="table-row">
-                  <div><strong>{med.name}</strong></div>
-                  <div>{med.dosage}</div>
-                  <div>{med.frequency}</div>
-                  <div>{med.duration}</div>
-                  <div>{med.notes}</div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div className="prescription-footer">
-            <div className="instructions">
-              <h4>Medical Advice & Instructions</h4>
-              <p>{prescriptionData.instructions}</p>
-            </div>
-            
-            <div className="follow-up">
-              <h4>Follow-up</h4>
-              <p>{prescriptionData.followUp}</p>
-            </div>
-
-            <div className="signature">
-              <div className="signature-line"></div>
-              <p><strong>{prescriptionData.doctor}</strong></p>
-              <p>Licensed Medical Practitioner</p>
-              <p>QuickMed Care</p>
-            </div>
-          </div>
-
-          <div className="prescription-actions">
-            <button className="btn btn-primary" onClick={() => window.print()}>
-              📄 {t.printPrescription}
-            </button>
-            <button className="btn btn-secondary" onClick={() => alert("Prescription sent to pharmacy!")}>
-              🏥 {t.sendToPharmacy}
-            </button>
-            <button className="btn btn-ghost" onClick={() => setShowPrescription(false)}>
-              {t.backToConsultation}
-            </button>
-          </div>
-        </div>
       ) : (
         <div className="card match">
           <div className="match-header">
@@ -704,7 +617,6 @@ export default function ConsultPage() {
             </div>
           </div>
 
-          {/* 🆕 INSURANCE SECTION ADDED HERE */}
           <div className="insurance-section">
             <p className="insurance-label">Accepts Insurance:</p>
             <div className="insurance-badges">
@@ -777,6 +689,149 @@ export default function ConsultPage() {
             <Link href="/emergency" className="btn btn-ghost" style={{background: '#fee', color: '#e74c3c', borderColor: '#e74c3c'}}>
               🚨 {t.emergencyContacts}
             </Link>
+          </div>
+        </div>
+      )}
+
+      {showPrescription && (
+        <div className="card prescription-card">
+          <div className="prescription-header">
+            <div className="prescription-logo">
+              <Image src="/quickmed-icon.png" alt="QuickMed Care" width={50} height={50} />
+              <div>
+                <h2>QuickMed Care</h2>
+                <p>Secure Digital Prescription</p>
+              </div>
+            </div>
+            <div className="prescription-id">
+              <strong>Prescription ID:</strong> {prescriptionData.prescriptionId}
+            </div>
+          </div>
+
+          <div className="prescription-info">
+            <div className="patient-info">
+              <h3>Patient Information</h3>
+              <p><strong>Name:</strong> {prescriptionData.patientName}</p>
+              <p><strong>Age:</strong> {prescriptionData.patientAge} years</p>
+              <p><strong>Gender:</strong> {prescriptionData.patientGender}</p>
+              <p><strong>Date:</strong> {prescriptionData.date}</p>
+            </div>
+            
+            <div className="doctor-info">
+              <h3>Prescribing Doctor</h3>
+              <p><strong>Name:</strong> {prescriptionData.doctor}</p>
+              <p><strong>License:</strong> {prescriptionData.doctorLicense}</p>
+              <p><strong>Diagnosis:</strong> {prescriptionData.diagnosis}</p>
+            </div>
+          </div>
+
+          <div className="qr-prescription-system">
+            <div className="qr-section">
+              <div className="qr-container">
+                <div className="qr-code-placeholder">
+                  <div className="qr-icon">📱</div>
+                  <h3>Secure QR Prescription</h3>
+                  <p>Your medications are securely stored</p>
+                </div>
+                <div className="prescription-code">
+                  <strong>Code:</strong> 
+                  <span className="code-value">{prescriptionData.prescriptionId}</span>
+                </div>
+              </div>
+              
+              <div className="pharmacy-instructions">
+                <h4>🚀 How to Get Your Medications:</h4>
+                <div className="steps">
+                  <div className="step">
+                    <span className="step-number">1</span>
+                    <p>Visit any <strong>QuickMed Partner Pharmacy</strong></p>
+                  </div>
+                  <div className="step">
+                    <span className="step-number">2</span>
+                    <p>Show this <strong>Prescription Code</strong> to pharmacist</p>
+                  </div>
+                  <div className="step">
+                    <span className="step-number">3</span>
+                    <p>Pharmacist retrieves your secure prescription</p>
+                  </div>
+                  <div className="step">
+                    <span className="step-number">4</span>
+                    <p>Receive medications with professional guidance</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="security-features">
+              <h4>🔒 Security Benefits:</h4>
+              <div className="features-grid">
+                <div className="feature">
+                  <span className="feature-icon">🛡️</span>
+                  <p>Prevents medication misuse</p>
+                </div>
+                <div className="feature">
+                  <span className="feature-icon">💊</span>
+                  <p>Professional dispensing only</p>
+                </div>
+                <div className="feature">
+                  <span className="feature-icon">🏥</span>
+                  <p>Quality-controlled pharmacies</p>
+                </div>
+                <div className="feature">
+                  <span className="feature-icon">📋</span>
+                  <p>Pharmacist counseling included</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="prescription-footer">
+            <div className="instructions">
+              <h4>Medical Advice & Instructions</h4>
+              <p>{prescriptionData.instructions}</p>
+            </div>
+            
+            <div className="follow-up">
+              <h4>Follow-up</h4>
+              <p>{prescriptionData.followUp}</p>
+            </div>
+
+            <div className="partner-pharmacies">
+              <h4>🏪 Partner Pharmacies Near You:</h4>
+              <div className="pharmacy-list">
+                <div className="pharmacy">
+                  <strong>MedPlus Pharmacy</strong> - 1.2km • 24/7
+                </div>
+                <div className="pharmacy">
+                  <strong>HealthPlus Abuja</strong> - 2.1km • Open until 10PM
+                </div>
+                <div className="pharmacy">
+                  <strong>Mopheth Pharmacy</strong> - 3.4km • 24/7
+                </div>
+                <div className="pharmacy">
+                  <strong>Alpha Pharmacy</strong> - 0.8km • Open until 9PM
+                </div>
+              </div>
+            </div>
+
+            <div className="signature">
+              <div className="signature-line"></div>
+              <p><strong>{prescriptionData.doctor}</strong></p>
+              <p>Licensed Medical Practitioner</p>
+              <p>QuickMed Care</p>
+            </div>
+          </div>
+
+          <div className="prescription-actions">
+            <button className="btn btn-primary" onClick={() => window.print()}>
+              📄 Print Prescription Code
+            </button>
+            <button className="btn btn-secondary" onClick={() => navigator.clipboard.writeText(prescriptionData.prescriptionId)}>
+              📋 Copy Code
+            </button>
+            <button className="btn btn-ghost" onClick={() => setShowPrescription(false)}>
+              {t.backToConsultation}
+            </button>
           </div>
         </div>
       )}
