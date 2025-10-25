@@ -17,6 +17,12 @@ const translations = {
     selectInsurance: "Select your insurance", 
     noInsurance: "No insurance",
     insuranceNote: "We'll help verify coverage with your provider",
+     travel: "Travel & Stay",
+    bookFlights: "Book Flights", 
+    findHotels: "Find Hotels",
+    medicalTourism: "Medical Tourism",
+    airportTaxis: "Airport Taxis",
+    travelPackages: "Travel Packages",
     
     // Consult Page
     quickConsultation: "Quick Consultation",
@@ -96,6 +102,12 @@ const translations = {
     selectInsurance: "Sélectionnez votre assurance", 
     noInsurance: "Pas d'assurance",
     insuranceNote: "Nous vous aiderons à vérifier la couverture avec votre assureur",
+    travel: "Voyage & Séjour",
+    bookFlights: "Réserver Vols",
+    findHotels: "Trouver Hôtels",
+    medicalTourism: "Tourisme Médical",
+    airportTaxis: "Taxis Aéroport",
+    travelPackages: "Forfaits Voyage",
     
     // Consult Page
     quickConsultation: "Consultation Rapide",
@@ -176,6 +188,12 @@ const translations = {
     selectInsurance: "Seleccione su seguro", 
     noInsurance: "Sin seguro",
     insuranceNote: "Le ayudaremos a verificar la cobertura con su aseguradora",
+     travel: "Viajar & Alojarse",
+    bookFlights: "Reservar Vuelos", 
+    findHotels: "Encontrar Hoteles",
+    medicalTourism: "Turismo Médico",
+    airportTaxis: "Taxis Aeropuerto",
+    travelPackages: "Paquetes de Viaje",
 
     
     // Consult Page  
