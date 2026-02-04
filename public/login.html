@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#2c3e50">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QuickMed - Login</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .login-container {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+            width: 100%;
+            max-width: 400px;
+        }
+
+        .login-header {
+            background: linear-gradient(135deg, #2c3e50, #3498db);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .login-header h1 {
+            font-size: 2em;
+            margin-bottom: 10px;
+        }
+
+        .login-content {
+            padding: 30px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #2c3e50;
+            font-weight: 600;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: #3498db;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            color: white;
+            border: none;
+            padding: 15px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            width: 100%;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(52, 152, 219, 0.3);
+        }
+
+        .btn-register {
+            background: linear-gradient(135deg, #27ae60, #2ecc71);
+            margin-top: 10px;
+        }
+
+        .demo-accounts {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 25px 0;
+            font-size: 14px;
+        }
+
+        .demo-title {
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: #2c3e50;
+        }
+
+        .demo-account {
+            padding: 8px;
+            margin: 5px 0;
+            background: white;
+            border-radius: 5px;
+            border-left: 3px solid #3498db;
+        }
+
+        .role-badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-left: 8px;
+        }
+
+        .role-doctor { background: #27ae60; color: white; }
+        .role-pharmacy { background: #e67e22; color: white; }
+        .role-admin { background: #e74c3c; color: white; }
+
+        .alert {
+            padding: 12px;
+            border-radius: 6px;
+            margin: 15px 0;
+            text-align: center;
+            font-size: 14px;
+        }
+
+        .alert-error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .alert-success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 10px;
+            color: #3498db;
+        }
+
+        .switch-form {
+            text-align: center;
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid #e0e0e0;
+        }
+
+        .switch-form a {
+            color: #3498db;
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .switch-form a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <div class="login-header">
+            <h1>🔐 QuickMed</h1>
+            <p>Secure Access Portal</p>
+        </div>
+
+        <div class="login-content">
+            <!-- Login Form -->
+            <form id="loginForm">
+                <div class="form-group">
+                    <label for="email">Email Address:</label>
+                    <input type="email" id="email" placeholder="your@email.com" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="password">Password:</label>
+                    <input type="password" id="password" placeholder="Enter your password" required>
+                </div>
+
+                <button type="submit" class="btn">🚀 Login</button>
+            </form>
+
+            <!-- Register Form (Hidden by default) -->
+            <form id="registerForm" class="hidden">
+                <div class="form-group">
+                    <label for="regName">Full Name:</label>
+                    <input type="text" id="regName" placeholder="Your full name" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="regEmail">Email Address:</label>
+                    <input type="email" id="regEmail" placeholder="your@email.com" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="regPassword">Password:</label>
+                    <input type="password" id="regPassword" placeholder="Create a password" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="regRole">Role:</label>
+                    <select id="regRole" required>
+                        <option value="">Select your role</option>
+                        <option value="patient">Patient</option>
+                        <option value="doctor">Doctor</option>
+                        <option value="pharmacy">Pharmacy Staff</option>
+                    </select>
+                </div>
+
+                <button type="submit" class="btn btn-register">📝 Create Account</button>
+            </form>
+
+            <!-- Demo Accounts -->
+            <div class="demo-accounts">
+                <div class="demo-title">Demo Accounts:</div>
+                <div class="demo-account">
+                    <strong>doctor@quickmed.com</strong>
+                    <span class="role-badge role-doctor">Doctor</span><br>
+                    Password: <code>password</code>
+                </div>
+                <div class="demo-account">
+                    <strong>pharmacy@quickmed.com</strong>
+                    <span class="role-badge role-pharmacy">Pharmacy</span><br>
+                    Password: <code>password</code>
+                </div>
+                <div class="demo-account">
+                    <strong>admin@quickmed.com</strong>
+                    <span class="role-badge role-admin">Admin</span><br>
+                    Password: <code>password</code>
+                </div>
+            </div>
+
+            <!-- Loading -->
+            <div id="loading" class="loading hidden">
+                <p>Authenticating...</p>
+            </div>
+
+            <!-- Alert Messages -->
+            <div id="alert" class="alert hidden"></div>
+
+            <!-- Form Switcher -->
+            <div class="switch-form">
+                <span id="switchText">Don't have an account?</span>
+                <a href="#" id="switchLink">Register here</a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let isLoginForm = true;
+
+        // Switch between login and register forms
+        document.getElementById('switchLink').addEventListener('click', function(e) {
+            e.preventDefault();
+            
+            isLoginForm = !isLoginForm;
+            
+            if (isLoginForm) {
+                document.getElementById('loginForm').classList.remove('hidden');
+                document.getElementById('registerForm').classList.add('hidden');
+                document.getElementById('switchText').textContent = "Don't have an account?";
+                document.getElementById('switchLink').textContent = "Register here";
+            } else {
+                document.getElementById('loginForm').classList.add('hidden');
+                document.getElementById('registerForm').classList.remove('hidden');
+                document.getElementById('switchText').textContent = "Already have an account?";
+                document.getElementById('switchLink').textContent = "Login here";
+            }
+            
+            hideAlert();
+        });
+
+        // Handle login form submission
+        document.getElementById('loginForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            await loginUser();
+        });
+
+        // Handle register form submission
+        document.getElementById('registerForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            await registerUser();
+        });
+
+        // Login function
+        async function loginUser() {
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+
+            if (!email || !password) {
+                showAlert('Please fill in all fields', 'error');
+                return;
+            }
+
+            showLoading(true);
+            hideAlert();
+
+            try {
+                const response = await fetch('/api/auth/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ email, password })
+                });
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.error || 'Login failed');
+                }
+
+                const data = await response.json();
+                
+                // Save token and user data to localStorage
+                localStorage.setItem('token', data.token);
+                localStorage.setItem('user', JSON.stringify(data.user));
+                
+                showAlert('Login successful! Redirecting...', 'success');
+                
+                // Redirect based on role
+                setTimeout(() => {
+                    redirectBasedOnRole(data.user.role);
+                }, 1000);
+                
+            } catch (error) {
+                showAlert('Login failed: ' + error.message, 'error');
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        // Register function
+        async function registerUser() {
+            const name = document.getElementById('regName').value;
+            const email = document.getElementById('regEmail').value;
+            const password = document.getElementById('regPassword').value;
+            const role = document.getElementById('regRole').value;
+
+            if (!name || !email || !password || !role) {
+                showAlert('Please fill in all fields', 'error');
+                return;
+            }
+
+            showLoading(true);
+            hideAlert();
+
+            try {
+                const response = await fetch('/api/auth/register', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ name, email, password, role })
+                });
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.error || 'Registration failed');
+                }
+
+                const data = await response.json();
+                
+                // Save token and user data
+                localStorage.setItem('token', data.token);
+                localStorage.setItem('user', JSON.stringify(data.user));
+                
+                showAlert('Registration successful! Redirecting...', 'success');
+                
+                // Redirect based on role
+                setTimeout(() => {
+                    redirectBasedOnRole(data.user.role);
+                }, 1000);
+                
+            } catch (error) {
+                showAlert('Registration failed: ' + error.message, 'error');
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        // Redirect user based on their role
+        function redirectBasedOnRole(role) {
+            switch (role) {
+                case 'doctor':
+                    window.location.href = '/doctor.html';
+                    break;
+                case 'pharmacy':
+                    window.location.href = '/pharmacy.html';
+                    break;
+                case 'admin':
+                    window.location.href = '/dashboard.html';
+                    break;
+                case 'patient':
+                    window.location.href = '/patient.html';
+                    break;
+                default:
+                    window.location.href = '/';
+            }
+        }
+
+        // Check if user is already logged in
+        function checkExistingLogin() {
+            const token = localStorage.getItem('token');
+            const user = localStorage.getItem('user');
+            
+            if (token && user) {
+                const userData = JSON.parse(user);
+                showAlert(`Welcome back, ${userData.name}! Redirecting...`, 'success');
+                setTimeout(() => {
+                    redirectBasedOnRole(userData.role);
+                }, 1000);
+            }
+        }
+
+        function showLoading(show) {
+            document.getElementById('loading').classList.toggle('hidden', !show);
+        }
+
+        function showAlert(message, type) {
+            const alert = document.getElementById('alert');
+            alert.textContent = message;
+            alert.className = `alert alert-${type}`;
+            alert.classList.remove('hidden');
+        }
+
+        function hideAlert() {
+            document.getElementById('alert').classList.add('hidden');
+        }
+
+        // Check for existing login when page loads
+        checkExistingLogin();
+    </script>
+</body>
+</html>

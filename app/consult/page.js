@@ -1,8 +1,15 @@
-"use client";
-import { useState } from "react";
-import Link from "next/link";
-import Image from "next/image";
+'use client';
+import { useState } from 'react';
+import Link from 'next/link';
+import { useSearchParams, useRouter } from 'next/navigation'; // BOTH from next/navigation
 import { useLanguage } from '../context/LanguageContext';
+import dynamic from 'next/dynamic';
+
+// Dynamically import the video call component (SSR disabled)
+const AgoraVideoCall = dynamic(() => import('../components/RealVideoCall'), {
+  ssr: false,
+  loading: () => <p>Loading video call...</p>
+});
 
 // Translations dictionary
 const translations = {
@@ -265,7 +272,22 @@ const translations = {
   }
 };
 
+const consultationTypes = {
+  video: { name: translations.en.videoCall, price: 5000 },    // ₦5,000
+  call: { name: translations.en.voiceCall, price: 3000 },     // ₦3,000  
+  chat: { name: translations.en.chat, price: 1500 },          // ₦1,500
+  emergency: { name: translations.en.emergencyCall, price: 10000 } // ₦10,000
+};
+
 export default function ConsultPage() {
+  
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  
+  // Get payment status from URL
+  const paymentRef = searchParams.get('payment');
+  const paymentVerified = searchParams.get('verified') === 'true';
+
   const { language } = useLanguage();
   const t = translations[language] || translations.en;
   
@@ -615,26 +637,25 @@ export default function ConsultPage() {
         </form>
       ) : (
         <div className="card match">
-          <div className="match-header">
-            <Image src="/quickmed-icon.png" alt="" width={40} height={40} className="match-icon" />
-            <div>
-              <div className="match-name">{match.name}</div>
-              <div className="match-sub">
-                {match.specialty} • ⭐ {match.rating} • ETA {match.eta}
-              </div>
-              <div className="consult-type-badge">
-                {match.consultationType === 'chat' && `💬 ${t.chatConsultation}`}
-                {match.consultationType === 'call' && `📞 ${t.voiceCall}`}  
-                {match.consultationType === 'video' && `🎥 ${t.videoCall}`}
-              </div>
-              {match.travelMode && (
-                <div className="travel-badge">
-                  🧳 Travel Mode • Language: {match.language}
-                </div>
-              )}
-            </div>
-          </div>
-
+<div className="match-header">
+  <img src="/quickmed-icon.png" alt="QuickMed" width={40} height={40} className="match-icon" />
+  <div>
+    <div className="match-name">{match.name}</div>
+    <div className="match-sub">
+      {match.specialty} • ⭐ {match.rating} • ETA {match.eta}
+    </div>
+    <div className="consult-type-badge">
+      {match.consultationType === 'chat' && `💬 ${t.chatConsultation}`}
+      {match.consultationType === 'call' && `📞 ${t.voiceCall}`}  
+      {match.consultationType === 'video' && `🎥 ${t.videoCall}`}
+    </div>
+    {match.travelMode && (
+      <div className="travel-badge">
+        🧳 Travel Mode • Language: {match.language}
+      </div>
+    )}
+  </div>
+</div>
           <div className="insurance-section">
             <p className="insurance-label">Accepts Insurance:</p>
             <div className="insurance-badges">
@@ -669,22 +690,58 @@ export default function ConsultPage() {
             <div className="text">{match.advice}</div>
           </div>
 
-          <div className="row">
-            <button
-              className="btn btn-primary"
-              onClick={() => alert(`Starting ${match.consultationType} consultation (demo)`)}
-            >
-              {match.consultationType === 'chat' && t.startChat}
-              {match.consultationType === 'call' && t.callDoctor}
-              {match.consultationType === 'video' && t.startVideo}
-            </button>
-            <button
-              className="btn btn-secondary"
-              onClick={generatePrescription}
-            >
-              📋 {t.getEprescription}
-            </button>
-          </div>
+<div className="row">
+{match.consultationType === 'video' ? (
+  <div style={{width: '100%', marginBottom: '16px'}}>
+    {/* Show payment status */}
+    {paymentVerified ? (
+      <div style={{background: '#d4edda', padding: '10px', borderRadius: '5px', marginBottom: '10px'}}>
+        ✅ Payment Verified - Video Call Ready
+      </div>
+    ) : (
+      <div style={{background: '#fff3cd', padding: '10px', borderRadius: '5px', marginBottom: '10px'}}>
+        ⏳ Payment Required - Complete payment to start video call
+      </div>
+    )}
+    
+    <AgoraVideoCall 
+      patientInfo={{
+        name: form.name || 'Patient',
+        symptoms: form.symptoms
+      }}
+      autoStart={paymentVerified} // Auto-start if payment verified
+      onCallEnd={() => {
+        console.log('Video consultation completed');
+        alert('Video consultation ended successfully!');
+      }}
+    />
+  </div>
+) : (
+
+    <button
+      className="btn btn-primary"
+      onClick={() => alert(`Starting ${match.consultationType} consultation (demo)`)}
+    >
+      {match.consultationType === 'chat' && t.startChat}
+      {match.consultationType === 'call' && t.callDoctor}
+      {match.consultationType === 'video' && t.startVideo}
+    </button>
+  )}
+  
+ <Link 
+  href={`/payment?type=${form.consultationType}&doctor=${match.name}&amount=${consultationTypes[form.consultationType]?.price}&name=${form.name}&email=${form.phone}&symptoms=${encodeURIComponent(form.symptoms)}&city=${form.city}`}
+  className="btn btn-primary"
+>
+  💳 Proceed to Payment
+</Link>
+
+  <button
+    className="btn btn-secondary"
+    onClick={generatePrescription}
+  >
+    📋 {t.getEprescription}
+  </button>
+</div>
 
           <div className="row">
             <button
@@ -715,12 +772,12 @@ export default function ConsultPage() {
         <div className="card prescription-card">
           <div className="prescription-header">
             <div className="prescription-logo">
-              <Image src="/quickmed-icon.png" alt="QuickMed Care" width={50} height={50} />
-              <div>
-                <h2>QuickMed Care</h2>
-                <p>Secure Digital Prescription</p>
-              </div>
-            </div>
+  <img src="/quickmed-icon.png" alt="QuickMed Care" width={50} height={50} />
+  <div>
+    <h2>QuickMed Care</h2>
+    <p>Secure Digital Prescription</p>
+  </div>
+</div>
             <div className="prescription-id">
               <strong>Prescription ID:</strong> {prescriptionData.prescriptionId}
             </div>
@@ -855,4 +912,54 @@ export default function ConsultPage() {
       )}
     </section>
   );
+}
+// Update these functions in your ConsultPage component
+const savePrescriptionToDB = async (prescriptionData) => {
+  try {
+    const response = await fetch('/api/prescriptions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(prescriptionData)
+    });
+    
+    if (!response.ok) {
+      throw new Error('Failed to save prescription');
+    }
+    
+    const result = await response.json();
+    console.log('✅ Prescription saved:', result);
+    return result;
+  } catch (error) {
+    console.error('❌ Error saving prescription:', error);
+    // Still show prescription even if save fails
+    return { prescription: prescriptionData };
+  }
+};
+
+// Update generatePrescription function
+async function generatePrescription() {
+  const prescriptionToSave = {
+    prescriptionId: prescriptionData.prescriptionId,
+    patientName: prescriptionData.patientName,
+    patientAge: prescriptionData.patientAge,
+    patientGender: prescriptionData.patientGender,
+    doctorName: prescriptionData.doctor,
+    doctorLicense: prescriptionData.doctorLicense,
+    diagnosis: prescriptionData.diagnosis,
+    medications: prescriptionData.medications,
+    instructions: prescriptionData.instructions,
+    followUp: prescriptionData.followUp
+  };
+
+  const result = await savePrescriptionToDB(prescriptionToSave);
+  
+  if (result.prescription) {
+    setShowPrescription(true);
+    alert('✅ Prescription saved securely! Show the code to any partner pharmacy.');
+  } else {
+    setShowPrescription(true);
+    alert('⚠️ Prescription generated (offline mode)');
+  }
 }

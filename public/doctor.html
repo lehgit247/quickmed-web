@@ -1,0 +1,1454 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#2c3e50">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8">
+    <title>QuickMed - Doctor Portal</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        /* Navigation Styles */
+        .nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .logo h1 {
+            font-size: 2em;
+            margin-bottom: 5px;
+        }
+
+        .logo p {
+            font-size: 1em;
+            opacity: 0.9;
+        }
+
+        .nav-links {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .nav-links a {
+            color: white;
+            text-decoration: none;
+            padding: 8px 16px;
+            border-radius: 5px;
+            transition: background 0.3s;
+        }
+
+        .nav-links a:hover {
+            background: rgba(255,255,255,0.2);
+        }
+
+        .nav-links a[href="/doctor.html"] {
+            background: rgba(255,255,255,0.2);
+        }
+
+        .header {
+            background: linear-gradient(135deg, #2c3e50, #3498db);
+            color: white;
+            padding: 30px;
+        }
+
+        .content {
+            padding: 40px;
+        }
+
+        .form-section {
+            margin-bottom: 30px;
+        }
+
+        .section-title {
+            color: #2c3e50;
+            margin-bottom: 20px;
+            font-size: 1.5em;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 10px;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group.full-width {
+            grid-column: 1 / -1;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #2c3e50;
+            font-weight: 600;
+        }
+
+        input, select, textarea {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+            font-family: inherit;
+        }
+
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: #3498db;
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(52, 152, 219, 0.3);
+        }
+
+        .btn-generate {
+            background: linear-gradient(135deg, #27ae60, #2ecc71);
+            margin-left: 10px;
+        }
+
+        .btn-print {
+            background: linear-gradient(135deg, #e67e22, #d35400);
+            margin-left: 10px;
+        }
+
+        .btn-email {
+            background: linear-gradient(135deg, #e74c3c, #c0392b);
+        }
+
+        .btn-sms {
+            background: linear-gradient(135deg, #27ae60, #219653);
+        }
+
+        .alert {
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+            text-align: center;
+        }
+
+        .alert-success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .alert-error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .alert-info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+
+        .prescription-preview {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 25px;
+            margin-top: 20px;
+            border-left: 5px solid #3498db;
+            display: none;
+        }
+
+        .communication-section {
+            background: #f0f8ff;
+            border-radius: 10px;
+            padding: 25px;
+            margin-top: 20px;
+            border-left: 5px solid #3498db;
+        }
+
+        .preview-header {
+            text-align: center;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 15px;
+        }
+
+        .preview-details {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .preview-item {
+            margin-bottom: 10px;
+        }
+
+        .preview-label {
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #3498db;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        /* Notifications Styles */
+        .notification-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+            max-width: 400px;
+        }
+
+        .notification {
+            background: white;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            border-left: 4px solid #3498db;
+            animation: slideIn 0.3s ease-out;
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+        }
+
+        .notification.success {
+            border-left-color: #27ae60;
+        }
+
+        .notification.warning {
+            border-left-color: #f39c12;
+        }
+
+        .notification.error {
+            border-left-color: #e74c3c;
+        }
+
+        .notification.info {
+            border-left-color: #3498db;
+        }
+
+        .notification-icon {
+            font-size: 1.2em;
+            flex-shrink: 0;
+        }
+
+        .notification-content {
+            flex: 1;
+        }
+
+        .notification-title {
+            font-weight: 600;
+            margin-bottom: 5px;
+            color: #2c3e50;
+        }
+
+        .notification-message {
+            color: #34495e;
+            font-size: 0.9em;
+            line-height: 1.4;
+        }
+
+        .notification-time {
+            color: #7f8c8d;
+            font-size: 0.8em;
+            margin-top: 5px;
+        }
+
+        .notification-close {
+            background: none;
+            border: none;
+            font-size: 1.2em;
+            cursor: pointer;
+            color: #95a5a6;
+            padding: 0;
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .notification-close:hover {
+            color: #e74c3c;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        @keyframes slideOut {
+            from {
+                transform: translateX(0);
+                opacity: 1;
+            }
+            to {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+        }
+
+        .notification.hiding {
+            animation: slideOut 0.3s ease-in forwards;
+        }
+
+        .notifications-bell {
+            position: relative;
+            cursor: pointer;
+            margin-left: 15px;
+        }
+
+        .bell-icon {
+            font-size: 1.3em;
+            color: white;
+            padding: 8px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.2);
+            transition: background 0.3s;
+        }
+
+        .bell-icon:hover {
+            background: rgba(255,255,255,0.3);
+        }
+
+        .bell-badge {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background: #e74c3c;
+            color: white;
+            border-radius: 50%;
+            width: 18px;
+            height: 18px;
+            font-size: 0.7em;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+
+        .notifications-panel {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            width: 350px;
+            max-height: 400px;
+            overflow-y: auto;
+            display: none;
+            z-index: 1001;
+        }
+
+        .notifications-panel.show {
+            display: block;
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        .panel-header {
+            padding: 15px;
+            border-bottom: 1px solid #ecf0f1;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .panel-header h3 {
+            margin: 0;
+            color: #2c3e50;
+        }
+
+        .panel-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .panel-action {
+            background: none;
+            border: none;
+            color: #3498db;
+            cursor: pointer;
+            font-size: 0.9em;
+        }
+
+        .panel-action:hover {
+            text-decoration: underline;
+        }
+
+        .notifications-list {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .notification-item {
+            padding: 12px 15px;
+            border-bottom: 1px solid #f8f9fa;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .notification-item:hover {
+            background: #f8f9fa;
+        }
+
+        .notification-item.unread {
+            background: #e8f4fc;
+        }
+
+        .notification-item-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 5px;
+        }
+
+        .notification-item-title {
+            font-weight: 600;
+            color: #2c3e50;
+            flex: 1;
+        }
+
+        .notification-item-time {
+            color: #7f8c8d;
+            font-size: 0.8em;
+            white-space: nowrap;
+        }
+
+        .notification-item-message {
+            color: #34495e;
+            font-size: 0.9em;
+            line-height: 1.3;
+        }
+
+        .no-notifications {
+            padding: 30px;
+            text-align: center;
+            color: #7f8c8d;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Mobile Responsive Styles */
+        @media (max-width: 768px) {
+            body {
+                padding: 10px;
+                font-size: 14px;
+            }
+
+            .container {
+                margin: 10px auto;
+                border-radius: 10px;
+            }
+
+            .header {
+                padding: 20px 15px;
+            }
+
+            .nav {
+                flex-direction: column;
+                gap: 15px;
+                text-align: center;
+            }
+
+            .nav-links {
+                flex-wrap: wrap;
+                justify-content: center;
+                gap: 10px;
+            }
+
+            .nav-links a {
+                padding: 6px 12px;
+                font-size: 14px;
+            }
+
+            .logo h1 {
+                font-size: 1.6em;
+            }
+
+            .logo p {
+                font-size: 0.9em;
+            }
+
+            .content {
+                padding: 20px;
+            }
+
+            .section-title {
+                font-size: 1.3em;
+            }
+
+            .form-grid {
+                grid-template-columns: 1fr;
+                gap: 15px;
+            }
+
+            .button-group {
+                flex-direction: column;
+            }
+
+            input, select, textarea {
+                font-size: 16px;
+                padding: 10px 12px;
+            }
+
+            .btn {
+                padding: 12px 20px;
+                font-size: 16px;
+            }
+
+            .notifications-panel {
+                width: 300px;
+                right: -50px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="nav">
+                <div class="logo">
+                    <h1>👨‍⚕️ QuickMed Doctor Portal</h1>
+                    <p>Create and Manage Digital Prescriptions</p>
+                </div>
+                <div class="nav-links">
+                    <a href="/pharmacy.html">Pharmacy</a>
+                    <a href="/dashboard.html">Dashboard</a>
+                    <a href="/doctor.html">Doctor</a>
+                    <a href="/patient.html">Patient</a>
+                    <a href="/analytics.html">Analytics</a>
+                    
+                    <!-- 🔔 NOTIFICATIONS BELL -->
+                    <div class="notifications-bell" id="notificationsBell">
+                        <div class="bell-icon">🔔</div>
+                        <div class="bell-badge" id="notificationBadge" style="display: none;">0</div>
+                        <div class="notifications-panel" id="notificationsPanel">
+                            <div class="panel-header">
+                                <h3>Notifications</h3>
+                                <div class="panel-actions">
+                                    <button class="panel-action" onclick="markAllAsRead()">Mark all read</button>
+                                    <button class="panel-action" onclick="clearNotifications()">Clear all</button>
+                                </div>
+                            </div>
+                            <div class="notifications-list" id="notificationsList">
+                                <!-- Notifications will be loaded here -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="content">
+            <!-- Prescription Form -->
+            <div class="form-section">
+                <h2 class="section-title">📝 Create New Prescription</h2>
+                
+                <form id="prescriptionForm">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="prescriptionId">Prescription ID:</label>
+                            <div style="display: flex;">
+                                <input type="text" id="prescriptionId" placeholder="e.g., RX1001" required>
+                                <button type="button" class="btn btn-generate" onclick="generatePrescriptionId()">
+                                    Generate
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="doctorName">Doctor Name:</label>
+                            <input type="text" id="doctorName" readonly style="background: #f0f0f0;">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="patientName">Patient Name:</label>
+                            <input type="text" id="patientName" placeholder="Patient Full Name" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="patientAge">Patient Age:</label>
+                            <input type="number" id="patientAge" placeholder="Age" min="1" max="120" required>
+                        </div>
+
+                        <div class="form-group full-width">
+                            <label for="medication">Medication:</label>
+                            <input type="text" id="medication" placeholder="e.g., Amoxicillin 500mg" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="dosage">Dosage:</label>
+                            <input type="text" id="dosage" placeholder="e.g., 1 tablet daily" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="duration">Duration:</label>
+                            <input type="text" id="duration" placeholder="e.g., 7 days" required>
+                        </div>
+
+                        <div class="form-group full-width">
+                            <label for="instructions">Instructions:</label>
+                            <textarea id="instructions" placeholder="Special instructions for the patient..." required></textarea>
+                        </div>
+
+                        <div class="form-group full-width">
+                            <label for="notes">Doctor's Notes (Optional):</label>
+                            <textarea id="notes" placeholder="Additional notes..."></textarea>
+                        </div>
+                    </div>
+
+                    <div class="button-group">
+                        <button type="submit" class="btn">💾 Save Prescription</button>
+                        <button type="button" class="btn btn-print" onclick="printPrescription()" style="display: none;" id="printBtn">
+                            🖨️ Print Prescription
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Loading -->
+            <div id="loading" class="loading hidden">
+                <p>Saving prescription...</p>
+            </div>
+
+            <!-- Alert Messages -->
+            <div id="alert" class="alert hidden"></div>
+
+            <!-- Prescription Preview -->
+            <div id="prescriptionPreview" class="prescription-preview">
+                <div class="preview-header">
+                    <h3>📄 PRESCRIPTION</h3>
+                    <p id="previewId">ID: -</p>
+                </div>
+                
+                <div class="preview-details">
+                    <div class="preview-item">
+                        <span class="preview-label">Patient:</span>
+                        <span id="previewPatient">-</span>
+                    </div>
+                    <div class="preview-item">
+                        <span class="preview-label">Age:</span>
+                        <span id="previewAge">-</span>
+                    </div>
+                    <div class="preview-item">
+                        <span class="preview-label">Doctor:</span>
+                        <span id="previewDoctor">-</span>
+                    </div>
+                    <div class="preview-item">
+                        <span class="preview-label">Date:</span>
+                        <span id="previewDate">-</span>
+                    </div>
+                    <div class="preview-item full-width">
+                        <span class="preview-label">Medication:</span>
+                        <span id="previewMedication">-</span>
+                    </div>
+                    <div class="preview-item">
+                        <span class="preview-label">Dosage:</span>
+                        <span id="previewDosage">-</span>
+                    </div>
+                    <div class="preview-item">
+                        <span class="preview-label">Duration:</span>
+                        <span id="previewDuration">-</span>
+                    </div>
+                    <div class="preview-item full-width">
+                        <span class="preview-label">Instructions:</span>
+                        <span id="previewInstructions">-</span>
+                    </div>
+                    <div class="preview-item full-width">
+                        <span class="preview-label">Notes:</span>
+                        <span id="previewNotes">-</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Email/SMS Section -->
+            <div id="communicationSection" class="communication-section hidden">
+                <h3 class="section-title">📧 Send to Patient</h3>
+                
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="patientEmail">Patient Email:</label>
+                        <input type="email" id="patientEmail" placeholder="patient@email.com">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="patientPhone">Patient Phone:</label>
+                        <input type="tel" id="patientPhone" placeholder="+1234567890">
+                    </div>
+                </div>
+                
+                <div class="button-group">
+                    <button class="btn btn-email" onclick="sendPrescriptionEmail()">
+                        📧 Email Prescription
+                    </button>
+                    <button class="btn btn-sms" onclick="sendPrescriptionSMS()">
+                        📱 SMS Notification
+                    </button>
+                    <button class="btn" onclick="sendBoth()">
+                        📧📱 Send Both
+                    </button>
+                </div>
+                
+                <div id="communicationStatus" class="alert hidden"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Authentication Script -->
+    <script>
+        function checkAuthentication() {
+            const token = localStorage.getItem('token');
+            const user = localStorage.getItem('user');
+            
+            if (!token || !user) {
+                window.location.href = '/login.html';
+                return null;
+            }
+            
+            return JSON.parse(user);
+        }
+
+        function logout() {
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+            window.location.href = '/login.html';
+        }
+
+        function addLogoutButton() {
+            const user = checkAuthentication();
+            if (!user) return;
+            
+            const nav = document.querySelector('.nav-links');
+            if (nav) {
+                const logoutBtn = document.createElement('a');
+                logoutBtn.href = '#';
+                logoutBtn.innerHTML = '🚪 Logout';
+                logoutBtn.style.color = '#e74c3c';
+                logoutBtn.onclick = (e) => {
+                    e.preventDefault();
+                    logout();
+                };
+                nav.appendChild(logoutBtn);
+                
+                const userInfo = document.createElement('span');
+                userInfo.innerHTML = `👤 ${user.name} <small>(${user.role})</small>`;
+                userInfo.style.color = 'white';
+                userInfo.style.marginRight = '15px';
+                nav.insertBefore(userInfo, nav.firstChild);
+            }
+        }
+
+        async function authFetch(url, options = {}) {
+            const token = localStorage.getItem('token');
+            
+            const headers = {
+                'Content-Type': 'application/json',
+                ...options.headers
+            };
+            
+            if (token) {
+                headers['Authorization'] = `Bearer ${token}`;
+            }
+            
+            const response = await fetch(url, {
+                ...options,
+                headers
+            });
+            
+            if (response.status === 401) {
+                logout();
+                throw new Error('Authentication required');
+            }
+            
+            if (response.status === 403) {
+                throw new Error('Insufficient permissions');
+            }
+            
+            return response;
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const user = checkAuthentication();
+            if (user) {
+                addLogoutButton();
+                console.log('Authenticated as:', user);
+                
+                // Auto-fill doctor's name
+                if (user.role === 'doctor') {
+                    document.getElementById('doctorName').value = user.name;
+                }
+            }
+        });
+    </script>
+
+    <!-- Doctor Functions -->
+    <script>
+        // Generate unique prescription ID
+        function generatePrescriptionId() {
+            const randomNum = Math.floor(1000 + Math.random() * 9000);
+            const prescriptionId = `RX${randomNum}`;
+            document.getElementById('prescriptionId').value = prescriptionId;
+        }
+
+        // Handle form submission
+        document.getElementById('prescriptionForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            await savePrescription();
+        });
+
+// Save prescription to database
+async function savePrescription() {
+const formData = {
+    prescriptionId: document.getElementById('prescriptionId').value,
+    patientName: document.getElementById('patientName').value,
+    doctorName: document.getElementById('doctorName').value,
+    medication: document.getElementById('medication').value,
+    dosage: document.getElementById('dosage').value,
+    duration: document.getElementById('duration').value, // ← ADD THIS LINE
+    instructions: document.getElementById('instructions').value,
+    date: new Date().toISOString(),
+    status: 'active'
+};
+
+    // Validate required fields
+    if (!formData.prescriptionId || !formData.patientName || !formData.doctorName || !formData.medication) {
+        showAlert('Please fill in all required fields', 'error');
+        return;
+    }
+
+    showLoading(true);
+    hideAlert();
+
+    try {
+        const response = await authFetch('/api/prescriptions', {
+            method: 'POST',
+            body: JSON.stringify(formData)
+        });
+
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.error || 'Failed to save prescription');
+        }
+
+        const result = await response.json();
+        showAlert('✅ Prescription saved successfully!', 'success');
+        showPrescriptionPreview(formData);
+        document.getElementById('printBtn').style.display = 'block';
+        
+        // 🆕 Show communication section
+        showCommunicationSection();
+        
+    } catch (error) {
+        showAlert('❌ Error: ' + error.message, 'error');
+    } finally {
+        showLoading(false);
+    }
+}
+
+        // Show prescription preview
+        function showPrescriptionPreview(data) {
+            document.getElementById('previewId').textContent = `ID: ${data.prescriptionId}`;
+            document.getElementById('previewPatient').textContent = data.patientName;
+            document.getElementById('previewAge').textContent = data.patientAge;
+            document.getElementById('previewDoctor').textContent = data.doctorName;
+            document.getElementById('previewMedication').textContent = data.medication;
+            document.getElementById('previewDosage').textContent = data.dosage;
+            document.getElementById('previewDuration').textContent = data.duration;
+            document.getElementById('previewInstructions').textContent = data.instructions;
+            document.getElementById('previewNotes').textContent = data.notes || 'None';
+            document.getElementById('previewDate').textContent = new Date().toLocaleDateString();
+            
+            document.getElementById('prescriptionPreview').style.display = 'block';
+        }
+
+        // Print prescription
+        function printPrescription() {
+            const preview = document.getElementById('prescriptionPreview');
+            const printWindow = window.open('', '_blank');
+            printWindow.document.write(`
+                <html>
+                    <head>
+                        <title>Prescription - ${document.getElementById('previewId').textContent}</title>
+                        <style>
+                            body { font-family: Arial, sans-serif; padding: 20px; }
+                            .header { text-align: center; border-bottom: 2px solid #000; padding-bottom: 10px; margin-bottom: 20px; }
+                            .details { margin: 20px 0; }
+                            .item { margin: 10px 0; }
+                            .label { font-weight: bold; }
+                            @media print { body { margin: 0; } }
+                        </style>
+                    </head>
+                    <body>
+                        ${preview.innerHTML}
+                    </body>
+                </html>
+            `);
+            printWindow.document.close();
+            printWindow.print();
+        }
+
+        function showLoading(show) {
+            document.getElementById('loading').classList.toggle('hidden', !show);
+        }
+
+        function showAlert(message, type) {
+            const alert = document.getElementById('alert');
+            alert.textContent = message;
+            alert.className = `alert alert-${type}`;
+            alert.classList.remove('hidden');
+        }
+
+        function hideAlert() {
+            document.getElementById('alert').classList.add('hidden');
+        }
+
+        // Auto-generate ID when page loads
+        generatePrescriptionId();
+    </script>
+
+    <!-- Email/SMS Functions -->
+    <script>
+        async function sendPrescriptionEmail() {
+            const prescriptionId = document.getElementById('prescriptionId').value;
+            const patientEmail = document.getElementById('patientEmail').value.trim();
+
+            if (!patientEmail) {
+                showCommunicationAlert('Please enter patient email address', 'error');
+                return;
+            }
+
+            if (!isValidEmail(patientEmail)) {
+                showCommunicationAlert('Please enter a valid email address', 'error');
+                return;
+            }
+
+            showCommunicationAlert('Sending email...', 'sending');
+
+            try {
+                const response = await authFetch(`/api/prescriptions/${prescriptionId}/email`, {
+                    method: 'POST',
+                    body: JSON.stringify({ patientEmail })
+                });
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.error || 'Failed to send email');
+                }
+
+                showCommunicationAlert('✅ Prescription emailed successfully!', 'success');
+                
+            } catch (error) {
+                showCommunicationAlert('❌ ' + error.message, 'error');
+            }
+        }
+
+        async function sendPrescriptionSMS() {
+            const prescriptionId = document.getElementById('prescriptionId').value;
+            const patientPhone = document.getElementById('patientPhone').value.trim();
+
+            if (!patientPhone) {
+                showCommunicationAlert('Please enter patient phone number', 'error');
+                return;
+            }
+
+            if (!isValidPhone(patientPhone)) {
+                showCommunicationAlert('Please enter a valid phone number (include country code)', 'error');
+                return;
+            }
+
+            showCommunicationAlert('Sending SMS...', 'sending');
+
+            try {
+                const response = await authFetch(`/api/prescriptions/${prescriptionId}/sms`, {
+                    method: 'POST',
+                    body: JSON.stringify({ patientPhone })
+                });
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.error || 'Failed to send SMS');
+                }
+
+                showCommunicationAlert('✅ SMS notification sent successfully!', 'success');
+                
+            } catch (error) {
+                showCommunicationAlert('❌ ' + error.message, 'error');
+            }
+        }
+
+        async function sendBoth() {
+            const prescriptionId = document.getElementById('prescriptionId').value;
+            const patientEmail = document.getElementById('patientEmail').value.trim();
+            const patientPhone = document.getElementById('patientPhone').value.trim();
+
+            if (!patientEmail && !patientPhone) {
+                showCommunicationAlert('Please enter either email or phone number', 'error');
+                return;
+            }
+
+            let emailSent = false;
+            let smsSent = false;
+
+            if (patientEmail && isValidEmail(patientEmail)) {
+                showCommunicationAlert('Sending email and SMS...', 'sending');
+                try {
+                    const emailResponse = await authFetch(`/api/prescriptions/${prescriptionId}/email`, {
+                        method: 'POST',
+                        body: JSON.stringify({ patientEmail })
+                    });
+                    emailSent = emailResponse.ok;
+                } catch (error) {
+                    console.error('Email failed:', error);
+                }
+            }
+
+            if (patientPhone && isValidPhone(patientPhone)) {
+                try {
+                    const smsResponse = await authFetch(`/api/prescriptions/${prescriptionId}/sms`, {
+                        method: 'POST',
+                        body: JSON.stringify({ patientPhone })
+                    });
+                    smsSent = smsResponse.ok;
+                } catch (error) {
+                    console.error('SMS failed:', error);
+                }
+            }
+
+            if (emailSent && smsSent) {
+                showCommunicationAlert('✅ Email and SMS sent successfully!', 'success');
+            } else if (emailSent) {
+                showCommunicationAlert('✅ Email sent successfully! (SMS failed)', 'success');
+            } else if (smsSent) {
+                showCommunicationAlert('✅ SMS sent successfully! (Email failed)', 'success');
+            } else {
+                showCommunicationAlert('❌ Failed to send both email and SMS', 'error');
+            }
+        }
+
+        // Utility functions
+        function isValidEmail(email) {
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            return emailRegex.test(email);
+        }
+
+        function isValidPhone(phone) {
+            // Basic international phone validation
+            const phoneRegex = /^\+?[\d\s\-\(\)]{10,}$/;
+            return phoneRegex.test(phone);
+        }
+
+        function showCommunicationAlert(message, type) {
+            const statusDiv = document.getElementById('communicationStatus');
+            statusDiv.textContent = message;
+            statusDiv.className = `alert alert-${type}`;
+            statusDiv.classList.remove('hidden');
+            
+            // Auto-hide success messages after 5 seconds
+            if (type === 'success') {
+                setTimeout(() => {
+                    statusDiv.classList.add('hidden');
+                }, 5000);
+            }
+        }
+
+        // Show communication section when prescription is saved
+        function showCommunicationSection() {
+            document.getElementById('communicationSection').classList.remove('hidden');
+            document.getElementById('communicationSection').scrollIntoView({ 
+                behavior: 'smooth' 
+            });
+        }
+    </script>
+
+    <!-- Notifications System -->
+    <script>
+        class NotificationManager {
+            constructor() {
+                this.ws = null;
+                this.notifications = [];
+                this.unreadCount = 0;
+                this.isPanelOpen = false;
+                this.init();
+            }
+
+            init() {
+                this.loadNotifications();
+                this.connectWebSocket();
+                this.setupEventListeners();
+            }
+
+            async loadNotifications() {
+                try {
+                    const token = localStorage.getItem('token');
+                    if (!token) return;
+
+                    const response = await authFetch('/api/notifications');
+                    if (response.ok) {
+                        this.notifications = await response.json();
+                        this.updateUnreadCount();
+                        this.renderNotifications();
+                    }
+                } catch (error) {
+                    console.error('Error loading notifications:', error);
+                }
+            }
+
+            connectWebSocket() {
+                const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+                const wsUrl = `${protocol}//${window.location.host}`;
+                
+                this.ws = new WebSocket(wsUrl);
+
+                this.ws.onopen = () => {
+                    console.log('🔔 WebSocket connected');
+                };
+
+                this.ws.onmessage = (event) => {
+                    const notification = JSON.parse(event.data);
+                    this.handleRealTimeNotification(notification);
+                };
+
+                this.ws.onclose = () => {
+                    console.log('🔔 WebSocket disconnected');
+                    setTimeout(() => this.connectWebSocket(), 5000);
+                };
+
+                this.ws.onerror = (error) => {
+                    console.error('🔔 WebSocket error:', error);
+                };
+            }
+
+            handleRealTimeNotification(notification) {
+                this.notifications.unshift(notification);
+                this.unreadCount++;
+                this.updateUnreadCount();
+                this.showToast(notification);
+                
+                if (this.isPanelOpen) {
+                    this.renderNotifications();
+                }
+            }
+
+            showToast(notification) {
+                const container = document.getElementById('notificationContainer') || this.createToastContainer();
+                
+                const toast = document.createElement('div');
+                toast.className = `notification ${this.getNotificationType(notification.type)}`;
+                toast.innerHTML = `
+                    <div class="notification-icon">${this.getNotificationIcon(notification.type)}</div>
+                    <div class="notification-content">
+                        <div class="notification-title">${this.getNotificationTitle(notification)}</div>
+                        <div class="notification-message">${notification.message}</div>
+                        <div class="notification-time">${this.formatTime(new Date())}</div>
+                    </div>
+                    <button class="notification-close" onclick="this.parentElement.remove()">×</button>
+                `;
+
+                container.appendChild(toast);
+
+                setTimeout(() => {
+                    if (toast.parentElement) {
+                        toast.classList.add('hiding');
+                        setTimeout(() => toast.remove(), 300);
+                    }
+                }, 5000);
+            }
+
+            createToastContainer() {
+                const container = document.createElement('div');
+                container.id = 'notificationContainer';
+                container.className = 'notification-container';
+                document.body.appendChild(container);
+                return container;
+            }
+
+            getNotificationType(type) {
+                const types = {
+                    'PRESCRIPTION_CREATED': 'success',
+                    'PRESCRIPTION_DISPENSED': 'info',
+                    'SYSTEM': 'info',
+                    'REMINDER': 'warning',
+                    'ERROR': 'error'
+                };
+                return types[type] || 'info';
+            }
+
+            getNotificationIcon(type) {
+                const icons = {
+                    'PRESCRIPTION_CREATED': '📝',
+                    'PRESCRIPTION_DISPENSED': '💊',
+                    'SYSTEM': '⚙️',
+                    'REMINDER': '⏰',
+                    'ERROR': '❌'
+                };
+                return icons[type] || '🔔';
+            }
+
+            getNotificationTitle(notification) {
+                const titles = {
+                    'PRESCRIPTION_CREATED': 'New Prescription',
+                    'PRESCRIPTION_DISPENSED': 'Prescription Dispensed',
+                    'SYSTEM': 'System Notification',
+                    'REMINDER': 'Reminder',
+                    'ERROR': 'Error'
+                };
+                return titles[notification.type] || 'Notification';
+            }
+
+            formatTime(date) {
+                return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            }
+
+            setupEventListeners() {
+                const bell = document.getElementById('notificationsBell');
+                const panel = document.getElementById('notificationsPanel');
+
+                if (bell && panel) {
+                    bell.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        this.togglePanel();
+                    });
+
+                    document.addEventListener('click', () => {
+                        if (this.isPanelOpen) {
+                            this.closePanel();
+                        }
+                    });
+                }
+            }
+
+            togglePanel() {
+                if (this.isPanelOpen) {
+                    this.closePanel();
+                } else {
+                    this.openPanel();
+                }
+            }
+
+            openPanel() {
+                const panel = document.getElementById('notificationsPanel');
+                if (panel) {
+                    panel.classList.add('show');
+                    this.isPanelOpen = true;
+                    this.markAllAsRead();
+                }
+            }
+
+            closePanel() {
+                const panel = document.getElementById('notificationsPanel');
+                if (panel) {
+                    panel.classList.remove('show');
+                    this.isPanelOpen = false;
+                }
+            }
+
+            renderNotifications() {
+                const list = document.getElementById('notificationsList');
+                if (!list) return;
+
+                if (this.notifications.length === 0) {
+                    list.innerHTML = '<div class="no-notifications">No notifications</div>';
+                    return;
+                }
+
+                list.innerHTML = this.notifications.map(notification => `
+                    <div class="notification-item ${notification.read ? '' : 'unread'}" 
+                         onclick="notificationManager.markAsRead(${notification.id})">
+                        <div class="notification-item-header">
+                            <div class="notification-item-title">${this.getNotificationTitle(notification)}</div>
+                            <div class="notification-item-time">${this.formatTime(new Date(notification.timestamp))}</div>
+                        </div>
+                        <div class="notification-item-message">${notification.message}</div>
+                    </div>
+                `).join('');
+            }
+
+            updateUnreadCount() {
+                const badge = document.getElementById('notificationBadge');
+                if (badge) {
+                    this.unreadCount = this.notifications.filter(n => !n.read).length;
+                    if (this.unreadCount > 0) {
+                        badge.textContent = this.unreadCount > 99 ? '99+' : this.unreadCount;
+                        badge.style.display = 'flex';
+                    } else {
+                        badge.style.display = 'none';
+                    }
+                }
+            }
+
+            async markAsRead(id) {
+                try {
+                    await authFetch(`/api/notifications/${id}/read`, { method: 'POST' });
+                    
+                    const notification = this.notifications.find(n => n.id === id);
+                    if (notification) {
+                        notification.read = true;
+                        this.updateUnreadCount();
+                        this.renderNotifications();
+                    }
+                } catch (error) {
+                    console.error('Error marking notification as read:', error);
+                }
+            }
+
+            async markAllAsRead() {
+                try {
+                    this.notifications.forEach(notification => {
+                        notification.read = true;
+                    });
+                    this.unreadCount = 0;
+                    this.updateUnreadCount();
+                    this.renderNotifications();
+                } catch (error) {
+                    console.error('Error marking all as read:', error);
+                }
+            }
+
+            async clearNotifications() {
+                try {
+                    this.notifications = [];
+                    this.unreadCount = 0;
+                    this.updateUnreadCount();
+                    this.renderNotifications();
+                    this.closePanel();
+                } catch (error) {
+                    console.error('Error clearing notifications:', error);
+                }
+            }
+        }
+
+        let notificationManager;
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const user = checkAuthentication();
+            if (user) {
+                notificationManager = new NotificationManager();
+            }
+        });
+
+        function markAllAsRead() {
+            if (notificationManager) {
+                notificationManager.markAllAsRead();
+            }
+        }
+
+        function clearNotifications() {
+            if (notificationManager) {
+                notificationManager.clearNotifications();
+            }
+        }
+    </script>
+
+   <script src="/mobile.js"></script>
+</script>
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Doctor Dashboard</title>
+    <!-- Your CSS files here -->
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- Your page content: navigation, patient list, etc. -->
+    <div class="doctor-dashboard">
+        <h1>Doctor Dashboard</h1>
+        <!-- Your existing content here -->
+    </div>
+
+    <!-- Video call interface (hidden by default) -->
+    <div id="videoCallContainer" style="display: none;">
+        <div id="remoteVideo"></div>
+        <!-- Other video call UI elements -->
+    </div>
+
+    <!-- Include the script at the BOTTOM, before closing </body> tag -->
+    <script src="js/doctor-video-call.js"></script>
+    
+    <!-- If you need to initialize it, add this too: -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialize video call system when page loads
+            window.doctorVideoCall = new DoctorVideoCall();
+        });
+    </script>
+
+</body>
+</html>
