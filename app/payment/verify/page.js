@@ -1,12 +1,13 @@
 'use client';
 import { useEffect, useState } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
+export const dynamic = 'force-dynamic';
 
 export default function PaymentVerify() {
   const [status, setStatus] = useState('verifying');
   const searchParams = useSearchParams();
   const router = useRouter();
-  
+
   const reference = searchParams.get('reference') || searchParams.get('trxref');
 
   useEffect(() => {
