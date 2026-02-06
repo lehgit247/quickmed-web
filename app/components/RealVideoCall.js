@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 
 export default function RealVideoCall({ onCallEnd = () => {}, patientInfo = {}, autoStart = false }) {
   const [agoraEngine, setAgoraEngine] = useState(null);
@@ -16,47 +16,45 @@ export default function RealVideoCall({ onCallEnd = () => {}, patientInfo = {}, 
   // HARDCODE YOUR AGORA APP ID FOR NOW
   const AGORA_APP_ID = '8f04fd597fc04f18841f26ed5a33dc66';
 
-  useEffect(() => {
-    initializeAgora();
-    
-    return () => {
-      cleanup();
-    };
-  }, []);
-
-  const cleanup = async () => {
+  const cleanup = useCallback(async () => {
     console.log('🧹 Cleaning up patient media tracks...');
     
-    // Stop and close all local tracks
-    localTracks.forEach(track => {
-      if (track) {
-        track.stop();
-        track.close();
+    try {
+      // Stop and close all local tracks
+      localTracks.forEach(track => {
+        if (track) {
+          track.stop();
+          track.close();
+        }
+      });
+      
+      // Leave channel
+      if (agoraEngine) {
+        await agoraEngine.leave();
+        console.log('✅ Patient left channel');
       }
-    });
-    
-    // Leave channel
-    if (agoraEngine) {
-      await agoraEngine.leave();
-      console.log('✅ Patient left channel');
+      
+      setLocalTracks([]);
+      setIsJoined(false);
+      setDoctorJoined(false);
+      
+    } catch (error) {
+      console.error('❌ Error during cleanup:', error);
     }
-    
-    setLocalTracks([]);
+  }, [agoraEngine, localTracks]);
+
+  const requestConsultation = async () => {
+    // For now, use mock data to test Agora connection
+    console.log('🚀 Starting video consultation');
+    const channel = `consult_${Date.now().toString().slice(-6)}`;
+    return {
+      success: true,
+      channelName: channel,
+      token: null // Using null token for testing
+    };
   };
 
-const requestConsultation = async () => {
-  // Use fixed channel for testing
-  const channelName = 'test_quickmed_channel';
-  
-  console.log('🚀 Starting video consultation. Channel:', channelName);
-  return {
-    success: true,
-    channelName: channelName,
-    token: null
-  };
-};
-
-  const initializeAgora = async () => {
+  const initializeAgora = useCallback(async () => {
     try {
       setIsLoading(true);
       
@@ -106,20 +104,20 @@ const requestConsultation = async () => {
       });
 
       // Join the channel with TEMPORARY TOKEN (null for testing)
+      // In production, you should get a proper token from your backend
       const uid = Math.floor(Math.random() * 10000);
       
       console.log('🔗 Joining channel...');
-      console.log('✅ Patient joined. Waiting for doctor...');
       console.log('App ID:', AGORA_APP_ID);
       console.log('Channel:', consultationData.channelName);
       console.log('UID:', uid);
       
-     await engine.join(
-  AGORA_APP_ID,
-  consultationData.channelName,
-  null, // Token can be null with APP ID auth
-  uid
-);
+      await engine.join(
+        AGORA_APP_ID,
+        consultationData.channelName,
+        null, // Using null token for testing
+        uid
+      );
       
       console.log('✅ Patient joined channel successfully:', consultationData.channelName);
       setIsJoined(true);
@@ -146,24 +144,22 @@ const requestConsultation = async () => {
       setError(`Video call failed: ${err.message}`);
       setIsLoading(false);
     }
-  };
+  }, [AGORA_APP_ID]);
+
+  useEffect(() => {
+    initializeAgora();
+    
+    return () => {
+      cleanup();
+    };
+  }, [initializeAgora, cleanup]);
 
   const handleEndCall = async () => {
-  console.log('🔄 Manually ending call...');
-  
-  // Immediately call the callback
-  onCallEnd();
-  
-  // Show immediate feedback
-  alert('Call ended!');
-  
-  // Try cleanup in background
-  try {
+    console.log('🔄 Ending patient consultation...');
+    
     await cleanup();
-  } catch (e) {
-    console.log('Background cleanup failed:', e);
-  }
-};
+    onCallEnd();
+  };
 
   if (isLoading) {
     return (
@@ -235,7 +231,7 @@ const requestConsultation = async () => {
         </div>
         
         <div>
-          <h4>Doctor's Video</h4>
+          <h4>Doctor&apos;s Video</h4>
           <div 
             ref={remotePlayerRef}
             style={{ 

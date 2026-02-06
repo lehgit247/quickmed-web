@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import dynamic from 'next/dynamic';
 
 const DoctorVideoCall = dynamic(() => import('../../components/DoctorVideoCall'), {
@@ -25,7 +25,7 @@ export default function DoctorDashboard() {
     setDoctor(mockDoctor);
   }, []);
 
-  const checkForIncomingCalls = async () => {
+  const checkForIncomingCalls = useCallback(async () => {
     if (isAvailable && doctor && !currentConsultation && !incomingCall) {
       try {
         const response = await fetch('/api/consultation/match', {
@@ -48,14 +48,14 @@ export default function DoctorDashboard() {
         console.error('Error checking for calls:', error);
       }
     }
-  };
+  }, [isAvailable, doctor, currentConsultation, incomingCall]);
 
   useEffect(() => {
     if (isAvailable && doctor) {
       const interval = setInterval(checkForIncomingCalls, 3000); // Check every 3 seconds
       return () => clearInterval(interval);
     }
-  }, [isAvailable, doctor, incomingCall]);
+  }, [isAvailable, doctor, checkForIncomingCalls]);
 
   const endConsultation = () => {
     setCurrentConsultation(null);
@@ -101,8 +101,7 @@ export default function DoctorDashboard() {
     }
   };
 
-  // ADD THIS FUNCTION - Replace your old startTestCall
-  const startTestCall = () => {
+  const startTestCall = useCallback(() => {
     // Use same channel pattern as patient side
     const testChannel = `consult_${Date.now().toString().slice(-6)}`;
     
@@ -116,7 +115,7 @@ export default function DoctorDashboard() {
     setIsCallActive(true);
     
     console.log('🎥 Test call started on channel:', testChannel);
-  };
+  }, []);
 
   // Calculate waiting time
   const getWaitingTime = () => {
@@ -239,7 +238,7 @@ export default function DoctorDashboard() {
               <div style={{ marginTop: '20px', color: '#666', textAlign: 'left', display: 'inline-block' }}>
                 <p>✅ Patients can request video consultations</p>
                 <p>✅ You will be notified automatically</p>
-                <p>✅ Click "Join Video Call" to connect</p>
+                <p>✅ Click &quot;Join Video Call&quot; to connect</p>
                 <p>✅ Calls are checked every 3 seconds</p>
               </div>
 

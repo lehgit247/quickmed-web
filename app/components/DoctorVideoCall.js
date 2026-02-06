@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 
 export default function DoctorVideoCall({ onCallEnd = () => {}, channelName = 'consultation-room' }) {
   const [agoraEngine, setAgoraEngine] = useState(null);
@@ -13,45 +13,37 @@ export default function DoctorVideoCall({ onCallEnd = () => {}, channelName = 'c
   const remotePlayerRef = useRef(null);
 
   // Use SAME App ID as patient side
-  const AGORA_APP_ID = '8f04fd597fc04f18841f26ed5a33dc66'; 
+  const AGORA_APP_ID = '8f04fd597fc04f18841f26ed5a33dc66';
 
-  useEffect(() => {
-    initializeAgora();
+  const cleanup = useCallback(async () => {
+    console.log('🧹 Cleaning up doctor media tracks...');
     
-    return () => {
-      cleanup();
-    };
-  }, [channelName]);
-
-const cleanup = async () => {
-  console.log('🧹 Cleaning up patient media tracks...');
-  
-  try {
-    // Stop and close all local tracks
-    localTracks.forEach(track => {
-      if (track) {
-        track.stop();
-        track.close();
+    try {
+      // Stop and close all local tracks
+      localTracks.forEach(track => {
+        if (track) {
+          track.stop();
+          track.close();
+        }
+      });
+      
+      // Leave channel
+      if (agoraEngine) {
+        console.log('Leaving Agora channel...');
+        await agoraEngine.leave();
+        console.log('✅ Doctor left channel');
       }
-    });
-    
-    // Leave channel
-    if (agoraEngine) {
-      console.log('Leaving Agora channel...');
-      await agoraEngine.leave();
-      console.log('✅ Patient left channel');
+      
+      setLocalTracks([]);
+      setIsJoined(false);
+      setPatientJoined(false);
+      
+    } catch (error) {
+      console.error('❌ Error during cleanup:', error);
     }
-    
-    setLocalTracks([]);
-    setIsJoined(false);
-    setPatientJoined(false);
-    
-  } catch (error) {
-    console.error('❌ Error during cleanup:', error);
-  }
-};
+  }, [agoraEngine, localTracks]);
 
-  const initializeAgora = async () => {
+  const initializeAgora = useCallback(async () => {
     try {
       setIsLoading(true);
       console.log('👨‍⚕️ Doctor initializing Agora RTC...');
@@ -65,11 +57,11 @@ const cleanup = async () => {
       const uid = Math.floor(Math.random() * 10000) + 10000; // Doctor UID
       
       console.log('🔗 Doctor joining channel...');
-      console.log('✅ Doctor joined. Waiting for patient...');
       console.log('App ID:', AGORA_APP_ID);
       console.log('Channel:', channelName);
       console.log('UID:', uid);
 
+      // Join with null token (APP ID auth)
       await engine.join(
         AGORA_APP_ID,
         channelName,
@@ -93,11 +85,11 @@ const cleanup = async () => {
         localVideoTrack.play(localPlayerRef.current);
       }
 
-      // Event listeners
       engine.on('user-published', async (user, mediaType) => {
         await engine.subscribe(user, mediaType);
         console.log('✅ Patient subscribed:', user.uid);
         
+        // Set patient as joined
         setPatientJoined(true);
 
         if (mediaType === 'video' && remotePlayerRef.current) {
@@ -118,29 +110,31 @@ const cleanup = async () => {
 
     } catch (err) {
       console.error('❌ Doctor Agora initialization failed:', err);
-      setError(`Doctor video call failed: ${err.message}`);
+      setError(`Doctor video call failed: ${err.message}. Please enable camera/microphone permissions.`);
       setIsLoading(false);
     }
-  };
+  }, [channelName, AGORA_APP_ID]);
+
+  useEffect(() => {
+    initializeAgora();
+    
+    return () => {
+      cleanup();
+    };
+  }, [initializeAgora, cleanup, channelName]);
 
   const handleEndCall = async () => {
-  console.log('🔄 Ending patient consultation...');
-  
-  try {
+    console.log('🔄 Ending doctor consultation...');
+    
     await cleanup();
-    console.log('✅ Cleanup completed');
-    onCallEnd(); // Call the callback
-  } catch (error) {
-    console.error('❌ Error during cleanup:', error);
-    onCallEnd(); // Still call the callback
-  }
-};
+    onCallEnd();
+  };
 
   if (isLoading) {
     return (
       <div style={{ padding: '20px', textAlign: 'center', color: 'black' }}>
         <p>👨‍⚕️ Joining patient call...</p>
-        <p style={{ fontSize: '14px', color: '#666' }}>Please allow camera & microphone permissions</p>
+        <p style={{ fontSize: '14px', color: '#666' }}>Please allow camera &amp; microphone permissions</p>
         <p style={{ fontSize: '12px', color: '#888' }}>Channel: {channelName}</p>
       </div>
     );
@@ -183,7 +177,7 @@ const cleanup = async () => {
         </div>
         
         <div>
-          <h4>Patient's Video</h4>
+          <h4>Patient&apos;s Video</h4>
           <div 
             ref={remotePlayerRef}
             style={{ 
