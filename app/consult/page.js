@@ -3,13 +3,13 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { useSearchParams, useRouter } from 'next/navigation'; // BOTH from next/navigation
 import { useLanguage } from '../context/LanguageContext';
-import dynamic from 'next/dynamic';
+import dynamicImport from 'next/dynamic';
 export const dynamic = 'force-dynamic';
 
 // Dynamically import the video call component (SSR disabled)
-const AgoraVideoCall = dynamic(() => import('../components/RealVideoCall'), {
+const AgoraVideoCall = dynamicImport(() => import('../components/RealVideoCall'), {
   ssr: false,
-  loading: () => <p>Loading video call...</p>
+  loading: () => <div>Loading video call...</div>
 });
 
 // Translations dictionary
