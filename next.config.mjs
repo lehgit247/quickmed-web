@@ -23,4 +23,4 @@ const nextConfig = {
   transpilePackages: ['agora-rtc-react', 'agora-rtc-sdk-ng'],
 }
 
-module.exports = nextConfig
+export default nextConfig;  // Changed from module.exports
