@@ -4,6 +4,7 @@ import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useLanguage } from '../context/LanguageContext';
 import { paystackService } from '../../lib/paystackService';
+export const dynamic = 'force-dynamic';
 
 const translations = {
   en: {
