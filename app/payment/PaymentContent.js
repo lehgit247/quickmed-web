@@ -1,16 +1,11 @@
 'use client';
-import { Suspense } from 'react';
-import PaymentContent from './PaymentContent';
-
+import { useState, useEffect } from 'react';
+import { useSearchParams, useRouter } from 'next/navigation';
+import Link from 'next/link';
+import { useLanguage } from '../context/LanguageContext';
+import { paystackService } from '../../lib/paystackService';
 export const dynamic = 'force-dynamic';
 
-export default function PaymentPage() {
-  return (
-    <Suspense fallback={<div>Loading payment page...</div>}>
-      <PaymentContent />
-    </Suspense>
-  );
-}
 const translations = {
   en: {
     securePayment: "Secure Payment",

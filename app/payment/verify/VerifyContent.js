@@ -1,16 +1,7 @@
 'use client';
-import { Suspense } from 'react';
-import VerifyContent from './VerifyContent';
-
+import { useEffect, useState } from 'react';
+import { useSearchParams, useRouter } from 'next/navigation';
 export const dynamic = 'force-dynamic';
-
-export default function VerifyPage() {
-  return (
-    <Suspense fallback={<div>Loading payment verification...</div>}>
-      <VerifyContent />
-    </Suspense>
-  );
-}
 
 export default function PaymentVerify() {
   const [status, setStatus] = useState('verifying');
