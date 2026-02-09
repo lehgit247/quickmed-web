@@ -1,26 +1,19 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // Force all pages to be dynamic (no static generation)
-  output: 'standalone',
+  // For server components
+  serverExternalPackages: ['mongoose'],
   
-  // Disable static optimization completely
-  experimental: {
-    serverComponentsExternalPackages: ['mongoose'],
-  },
-  
-  // Disable static generation for all routes
-  generateStaticParams: () => {
-    return {};
-  },
-  
-  // Important: Disable static rendering
-  staticPageGenerationTimeout: 0,
-  
-  // Ensure no pages are pre-rendered
+  // For Turbopack
   swcMinify: true,
   
-  // Add transpile for Agora
+  // Disable static optimization for problematic pages
+  experimental: {
+    // Optional: Enable if you need server actions
+    // serverActions: true,
+  },
+  
+  // Transpile Agora packages
   transpilePackages: ['agora-rtc-react', 'agora-rtc-sdk-ng'],
 }
 
-export default nextConfig;  // Changed from module.exports
+export default nextConfig;
