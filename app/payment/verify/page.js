@@ -1,5 +1,5 @@
 'use client';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 export const dynamic = 'force-dynamic';
 
@@ -18,17 +18,11 @@ export default function PaymentVerify() {
       
       setReference(ref || '');
       setId(urlId || '');
-      
-      if (ref) {
-        // Verify payment with your API
-        verifyPayment(ref);
-      } else {
-        setStatus('error');
-      }
     }
   }, []);
 
-  const verifyPayment = async (ref) => {
+  // Wrap verifyPayment in useCallback
+  const verifyPayment = useCallback(async (ref) => {
     try {
       const response = await fetch(`/api/payment/verify?reference=${ref}`);
       const data = await response.json();
@@ -50,7 +44,16 @@ export default function PaymentVerify() {
       console.error('Payment verification error:', error);
       setStatus('error');
     }
-  };
+  }, [id, router]); // Add dependencies
+
+  // Trigger verification when reference is available
+  useEffect(() => {
+    if (reference) {
+      verifyPayment(reference);
+    } else {
+      setStatus('error');
+    }
+  }, [reference, verifyPayment]); // Now depends on verifyPayment
 
   return (
     <div style={styles.container}>

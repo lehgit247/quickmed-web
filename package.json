@@ -23,7 +23,7 @@
     "helmet": "^8.1.0",
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.19.1",
-    "next": "15.5.2",
+    "next": "^16.1.6",
     "nodemailer": "^7.0.11",
     "react": "19.1.0",
     "react-dom": "19.1.0",

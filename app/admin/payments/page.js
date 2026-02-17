@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 export const dynamic = 'force-dynamic';
 
 export default function AdminPaymentsPage() {
@@ -7,7 +7,7 @@ export default function AdminPaymentsPage() {
   const [stats, setStats] = useState({});
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('all');
-  const [id, setId] = useState(''); // Added ID state
+  const [id, setId] = useState('');
 
   // Extract URL parameters on client side
   useEffect(() => {
@@ -16,24 +16,14 @@ export default function AdminPaymentsPage() {
       const urlId = params.get('id');
       setId(urlId || '');
       
-      // If there's an ID in the URL, you might want to filter by it
       if (urlId) {
         console.log('Filtering payments for ID:', urlId);
-        // You could set a specific filter here or pass it to your API
       }
     }
   }, []);
 
-  useEffect(() => {
-    console.log('Current payments:', payments);
-    console.log('Stats:', stats);
-  }, [payments, stats]);
-
-  useEffect(() => {
-    fetchPayments();
-  }, [filter, id]); // Added id as dependency
-
-  const fetchPayments = async () => {
+  // Wrap fetchPayments in useCallback
+  const fetchPayments = useCallback(async () => {
     try {
       setLoading(true);
       let url = filter === 'all' 
@@ -57,7 +47,16 @@ export default function AdminPaymentsPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [filter, id]); // Add dependencies
+
+  useEffect(() => {
+    fetchPayments();
+  }, [fetchPayments]); // Now depends on fetchPayments
+
+  useEffect(() => {
+    console.log('Current payments:', payments);
+    console.log('Stats:', stats);
+  }, [payments, stats]);
 
   const formatCurrency = (amount) => {
     return new Intl.NumberFormat('en-NG', {
@@ -74,7 +73,6 @@ export default function AdminPaymentsPage() {
         throw new Error('Failed to download receipt');
       }
       
-      // Create blob and download
       const blob = await response.blob();
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
@@ -157,7 +155,6 @@ export default function AdminPaymentsPage() {
           🔍 Filtering for ID: <strong>{id}</strong>
           <button onClick={() => {
             setId('');
-            // Remove id from URL without page reload
             if (typeof window !== 'undefined') {
               const url = new URL(window.location.href);
               url.searchParams.delete('id');
@@ -194,7 +191,7 @@ export default function AdminPaymentsPage() {
             <tbody>
               {payments.map((payment) => (
                 <tr key={payment.id}>
-                  <td className="reference">{payment.reference.substring(0, 10)}...</td>
+                  <td className="reference">{payment.reference?.substring(0, 10)}...</td>
                   <td>{payment.patientName || payment.email}</td>
                   <td>{payment.doctorName || 'N/A'}</td>
                   <td>{payment.consultationType || 'Consultation'}</td>

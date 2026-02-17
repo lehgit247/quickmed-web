@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'; // Only useRouter now
 import { useLanguage } from '../context/LanguageContext';
 import dynamicImport from 'next/dynamic';
 export const dynamic = 'force-dynamic';
+import Image from 'next/image';
 
 // Dynamically import the video call component (SSR disabled)
 const AgoraVideoCall = dynamicImport(() => import('../components/RealVideoCall'), {
@@ -700,7 +701,13 @@ export default function ConsultPage() {
       ) : (
         <div className="card match">
           <div className="match-header">
-            <img src="/quickmed-icon.png" alt="QuickMed" width={40} height={40} className="match-icon" />
+            <Image 
+  src="/quickmed-icon.png" 
+  alt="QuickMed" 
+  width={40} 
+  height={40} 
+  className="match-icon" 
+/>
             <div>
               <div className="match-name">{match.name}</div>
               <div className="match-sub">
@@ -833,7 +840,12 @@ export default function ConsultPage() {
         <div className="card prescription-card">
           <div className="prescription-header">
             <div className="prescription-logo">
-              <img src="/quickmed-icon.png" alt="QuickMed Care" width={50} height={50} />
+              <Image 
+  src="/quickmed-icon.png" 
+  alt="QuickMed Care" 
+  width={50} 
+  height={50} 
+/>
               <div>
                 <h2>QuickMed Care</h2>
                 <p>Secure Digital Prescription</p>
