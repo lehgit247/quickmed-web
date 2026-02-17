@@ -1,16 +1,11 @@
 'use client';
-import { Suspense } from 'react';
-import PaymentContent from './PaymentContent';
-
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import Link from 'next/link';
+import { useLanguage } from '../context/LanguageContext';
+import { paystackService } from '../../lib/paystackService';
 export const dynamic = 'force-dynamic';
 
-export default function PaymentPage() {
-  return (
-    <Suspense fallback={<div>Loading payment page...</div>}>
-      <PaymentContent />
-    </Suspense>
-  );
-}
 const translations = {
   en: {
     securePayment: "Secure Payment",
@@ -109,17 +104,33 @@ const translations = {
 export default function PaymentPage() {
   const { language } = useLanguage();
   const t = translations[language] || translations.en;
-  const searchParams = useSearchParams();
   const router = useRouter();
 
-  // Get patient data from URL
-  const patientName = searchParams.get('name') || 'Patient';
-  const patientPhone = searchParams.get('email') || searchParams.get('phone') || '';
-  const patientSymptoms = searchParams.get('symptoms') || '';
-  const patientCity = searchParams.get('city') || '';
-  const selectedDoctor = searchParams.get('doctor') || 'Dr. Ada Okoye';
-  const consultationType = searchParams.get('type') || 'video';
-  const amount = searchParams.get('amount') || '5000'; // in cents/kobo
+  // State for URL parameters
+  const [patientName, setPatientName] = useState('Patient');
+  const [patientPhone, setPatientPhone] = useState('');
+  const [patientSymptoms, setPatientSymptoms] = useState('');
+  const [patientCity, setPatientCity] = useState('');
+  const [selectedDoctor, setSelectedDoctor] = useState('Dr. Ada Okoye');
+  const [consultationType, setConsultationType] = useState('video');
+  const [amount, setAmount] = useState('5000');
+  const [id, setId] = useState('');
+
+  // Extract URL parameters on client side
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      
+      setId(params.get('id') || '');
+      setPatientName(params.get('name') || 'Patient');
+      setPatientPhone(params.get('email') || params.get('phone') || '');
+      setPatientSymptoms(params.get('symptoms') || '');
+      setPatientCity(params.get('city') || '');
+      setSelectedDoctor(params.get('doctor') || 'Dr. Ada Okoye');
+      setConsultationType(params.get('type') || 'video');
+      setAmount(params.get('amount') || '5000');
+    }
+  }, []);
 
   const [paymentMethod, setPaymentMethod] = useState('card');
   const [isProcessing, setIsProcessing] = useState(false);
@@ -186,172 +197,188 @@ export default function PaymentPage() {
     }, 2000);
   };
 
- // Updated handlePayment function with better error handling
-const handlePayment = async (e) => {
-  e.preventDefault();
-  setIsProcessing(true);
+  // Updated handlePayment function with better error handling
+  const handlePayment = async (e) => {
+    e.preventDefault();
+    setIsProcessing(true);
 
-  try {
-    // Validate form data based on payment method
-    if (!validatePaymentForm()) {
-      throw new Error('Please fill in all required fields');
-    }
+    try {
+      // Validate form data based on payment method
+      if (!validatePaymentForm()) {
+        throw new Error('Please fill in all required fields');
+      }
 
-    let paymentResult;
+      let paymentResult;
 
-    switch (paymentMethod) {
-      case 'card':
-        paymentResult = await handleCardPayment();
-        break;
+      switch (paymentMethod) {
+        case 'card':
+          paymentResult = await handleCardPayment();
+          break;
 
-      case 'transfer':
-        paymentResult = await handleBankTransfer();
-        break;
+        case 'transfer':
+          paymentResult = await handleBankTransfer();
+          break;
 
-      case 'mobile':
-        paymentResult = await handleMobileMoney();
-        break;
+        case 'mobile':
+          paymentResult = await handleMobileMoney();
+          break;
 
-      case 'insurance':
-        paymentResult = await handleInsuranceClaim();
-        break;
+        case 'insurance':
+          paymentResult = await handleInsuranceClaim();
+          break;
 
-      default:
-        throw new Error('Invalid payment method');
-    }
+        default:
+          throw new Error('Invalid payment method');
+      }
 
-    if (paymentResult.success) {
+      if (paymentResult.success) {
+        setIsProcessing(false);
+        setIsSuccess(true);
+        
+        // Save payment record to database
+        await savePaymentRecord(paymentResult);
+        
+        setTimeout(() => {
+          router.push('/consult');
+        }, 2000);
+      }
+    } catch (error) {
+      console.error('Payment error:', error);
       setIsProcessing(false);
-      setIsSuccess(true);
-      
-      // Save payment record to database
-      await savePaymentRecord(paymentResult);
-      
-      setTimeout(() => {
-        router.push('/consult');
-      }, 2000);
+      // Show user-friendly error message
+      alert(`Payment failed: ${error.message}`);
     }
-  } catch (error) {
-    console.error('Payment error:', error);
-    setIsProcessing(false);
-    // Show user-friendly error message
-    alert(`Payment failed: ${error.message}`);
-  }
-};
+  };
 
-// Card payment handler
-const handleCardPayment = async () => {
-  const userEmail = 'test@quickmedcare.com';
-  const amountInNaira = consultationTypes[consultationType]?.price / 100;
+  // Card payment handler
+  const handleCardPayment = async () => {
+    const userEmail = 'test@quickmedcare.com';
+    const amountInNaira = consultationTypes[consultationType]?.price / 100;
 
-  try {
-    const response = await fetch('/api/payment/initialize', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        email: 'test@quickmedcare.com',
-        amount: amountInNaira,
-        metadata: {
-          consultation_type: consultationType,
-          doctor_name: selectedDoctor,
-          patient_name: patientName,
-          patient_phone: patientPhone,
-          patient_city: patientCity,
-          symptoms: patientSymptoms,
-          callback_url: 'http://localhost:3000/payment/verify' // Redirect to video consult
-        }
-      }),
-    });
+    try {
+      const response = await fetch('/api/payment/initialize', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: 'test@quickmedcare.com',
+          amount: amountInNaira,
+          metadata: {
+            consultation_type: consultationType,
+            doctor_name: selectedDoctor,
+            patient_name: patientName,
+            patient_phone: patientPhone,
+            patient_city: patientCity,
+            symptoms: patientSymptoms,
+            callback_url: 'http://localhost:3000/payment/verify' // Redirect to video consult
+          }
+        }),
+      });
 
-    const result = await response.json();
+      const result = await response.json();
 
-    if (!result.success) {
+      if (!result.success) {
         console.error('❌ Payment initialization failed:', result);
         console.error('Error details:', result.error);
-      throw new Error(result.error);
-    }
-
-    console.log('✅ Payment initialized:', result.data.reference);
-    
-    // Open Paystack in new tab
-    const paystackWindow = window.open(
-      result.data.authorization_url,
-      '_blank'
-    );
-    
-    if (!paystackWindow) {
-      alert('Please allow popups for Paystack checkout');
-      return { success: false, error: 'Popup blocked' };
-    }
-    
-    // Check payment status every 3 seconds
-    const checkInterval = setInterval(async () => {
-      try {
-        const verifyResponse = await fetch(`/api/payment/verify?reference=${result.data.reference}`);
-        const verifyData = await verifyResponse.json();
-        
-        if (verifyData.success) {
-          clearInterval(checkInterval);
-          paystackWindow.close();
-          
-          // Redirect to success page
-          window.location.href = `/payment/verify?reference=${result.data.reference}&status=success`;
-        }
-      } catch (error) {
-        console.error('Verification error:', error);
+        throw new Error(result.error);
       }
-    }, 3000);
 
-    // Stop checking after 2 minutes
-    setTimeout(() => {
-      clearInterval(checkInterval);
-      console.log('⏰ Payment check timeout');
-    }, 120000);
+      console.log('✅ Payment initialized:', result.data.reference);
+      
+      // Open Paystack in new tab
+      const paystackWindow = window.open(
+        result.data.authorization_url,
+        '_blank'
+      );
+      
+      if (!paystackWindow) {
+        alert('Please allow popups for Paystack checkout');
+        return { success: false, error: 'Popup blocked' };
+      }
+      
+      // Check payment status every 3 seconds
+      const checkInterval = setInterval(async () => {
+        try {
+          const verifyResponse = await fetch(`/api/payment/verify?reference=${result.data.reference}`);
+          const verifyData = await verifyResponse.json();
+          
+          if (verifyData.success) {
+            clearInterval(checkInterval);
+            paystackWindow.close();
+            
+            // Redirect to success page
+            window.location.href = `/payment/verify?reference=${result.data.reference}&status=success`;
+          }
+        } catch (error) {
+          console.error('Verification error:', error);
+        }
+      }, 3000);
 
-    return { success: true, reference: result.data.reference };
-    
-  } catch (error) {
-    console.error('❌ Payment failed:', error);
-    throw new Error(`Payment initialization failed: ${error.message}`);
-  }
-};
+      // Stop checking after 2 minutes
+      setTimeout(() => {
+        clearInterval(checkInterval);
+        console.log('⏰ Payment check timeout');
+      }, 120000);
 
-// Form validation
-const validatePaymentForm = () => {
-  switch (paymentMethod) {
-    case 'card':
-      return formData.cardNumber && formData.expiryDate && formData.cvv && formData.nameOnCard;
-    
-    case 'mobile':
-      return formData.phoneNumber;
-    
-    case 'insurance':
-      return formData.insuranceProvider && formData.policyNumber && coverageStatus === 'verified';
-    
-    case 'transfer':
-      return true; // Bank transfer doesn't need form validation
-    
-    default:
-      return false;
-  }
-};
-
-// Save payment record (simplified)
-const savePaymentRecord = async (paymentResult) => {
-  // In a real app, you'd save to your database
-  const paymentRecord = {
-    id: paymentResult.reference,
-    amount: consultationTypes[consultationType]?.price,
-    method: paymentMethod,
-    status: 'completed',
-    createdAt: new Date().toISOString(),
-    consultationType,
-    selectedDoctor,
+      return { success: true, reference: result.data.reference };
+      
+    } catch (error) {
+      console.error('❌ Payment failed:', error);
+      throw new Error(`Payment initialization failed: ${error.message}`);
+    }
   };
-  
-  console.log('Payment record:', paymentRecord);
-  // await apiCall to save to database
-};
+
+  // Placeholder handlers for other payment methods
+  const handleBankTransfer = async () => {
+    // Simulate bank transfer
+    return { success: true, reference: `TRF-${Date.now()}` };
+  };
+
+  const handleMobileMoney = async () => {
+    // Simulate mobile money
+    return { success: true, reference: `MOB-${Date.now()}` };
+  };
+
+  const handleInsuranceClaim = async () => {
+    // Simulate insurance claim
+    return { success: true, reference: `INS-${Date.now()}` };
+  };
+
+  // Form validation
+  const validatePaymentForm = () => {
+    switch (paymentMethod) {
+      case 'card':
+        return formData.cardNumber && formData.expiryDate && formData.cvv && formData.nameOnCard;
+      
+      case 'mobile':
+        return formData.phoneNumber;
+      
+      case 'insurance':
+        return formData.insuranceProvider && formData.policyNumber && coverageStatus === 'verified';
+      
+      case 'transfer':
+        return true; // Bank transfer doesn't need form validation
+      
+      default:
+        return false;
+    }
+  };
+
+  // Save payment record (simplified)
+  const savePaymentRecord = async (paymentResult) => {
+    // In a real app, you'd save to your database
+    const paymentRecord = {
+      id: paymentResult.reference,
+      amount: consultationTypes[consultationType]?.price,
+      method: paymentMethod,
+      status: 'completed',
+      createdAt: new Date().toISOString(),
+      consultationType,
+      selectedDoctor,
+    };
+    
+    console.log('Payment record:', paymentRecord);
+    // await apiCall to save to database
+  };
 
   if (isSuccess) {
     return (

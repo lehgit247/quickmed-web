@@ -7,6 +7,22 @@ export default function AdminPaymentsPage() {
   const [stats, setStats] = useState({});
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('all');
+  const [id, setId] = useState(''); // Added ID state
+
+  // Extract URL parameters on client side
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      const urlId = params.get('id');
+      setId(urlId || '');
+      
+      // If there's an ID in the URL, you might want to filter by it
+      if (urlId) {
+        console.log('Filtering payments for ID:', urlId);
+        // You could set a specific filter here or pass it to your API
+      }
+    }
+  }, []);
 
   useEffect(() => {
     console.log('Current payments:', payments);
@@ -15,14 +31,19 @@ export default function AdminPaymentsPage() {
 
   useEffect(() => {
     fetchPayments();
-  }, [filter]);
+  }, [filter, id]); // Added id as dependency
 
   const fetchPayments = async () => {
     try {
       setLoading(true);
-      const url = filter === 'all' 
+      let url = filter === 'all' 
         ? '/api/admin/payments'
         : `/api/admin/payments?status=${filter}`;
+      
+      // Add ID parameter if present
+      if (id) {
+        url += url.includes('?') ? `&id=${id}` : `?id=${id}`;
+      }
       
       const response = await fetch(url);
       const data = await response.json();
@@ -46,30 +67,30 @@ export default function AdminPaymentsPage() {
   };
 
   const downloadReceipt = async (reference) => {
-  try {
-    const response = await fetch(`/api/payment/receipt/${reference}`);
-    
-    if (!response.ok) {
-      throw new Error('Failed to download receipt');
+    try {
+      const response = await fetch(`/api/payment/receipt/${reference}`);
+      
+      if (!response.ok) {
+        throw new Error('Failed to download receipt');
+      }
+      
+      // Create blob and download
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `receipt-${reference}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+      
+      console.log('Receipt downloaded:', reference);
+    } catch (error) {
+      console.error('Download error:', error);
+      alert('Failed to download receipt');
     }
-    
-    // Create blob and download
-    const blob = await response.blob();
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `receipt-${reference}.pdf`;
-    document.body.appendChild(a);
-    a.click();
-    window.URL.revokeObjectURL(url);
-    document.body.removeChild(a);
-    
-    console.log('Receipt downloaded:', reference);
-  } catch (error) {
-    console.error('Download error:', error);
-    alert('Failed to download receipt');
-  }
-};
+  };
 
   const formatDate = (dateString) => {
     return new Date(dateString).toLocaleDateString('en-NG', {
@@ -130,6 +151,22 @@ export default function AdminPaymentsPage() {
         </button>
       </div>
 
+      {/* Show ID filter if present */}
+      {id && (
+        <div className="id-filter-badge">
+          🔍 Filtering for ID: <strong>{id}</strong>
+          <button onClick={() => {
+            setId('');
+            // Remove id from URL without page reload
+            if (typeof window !== 'undefined') {
+              const url = new URL(window.location.href);
+              url.searchParams.delete('id');
+              window.history.replaceState({}, '', url.toString());
+            }
+          }}>Clear</button>
+        </div>
+      )}
+
       {/* Payments Table */}
       {loading ? (
         <div className="loading">Loading payments...</div>
@@ -155,7 +192,7 @@ export default function AdminPaymentsPage() {
               </tr>
             </thead>
             <tbody>
-                 {payments.map((payment) => (
+              {payments.map((payment) => (
                 <tr key={payment.id}>
                   <td className="reference">{payment.reference.substring(0, 10)}...</td>
                   <td>{payment.patientName || payment.email}</td>
@@ -174,15 +211,15 @@ export default function AdminPaymentsPage() {
                     </span>
                   </td>
                   
-                 <td>
-                 <button 
-                 onClick={() => downloadReceipt(payment.reference)}
-                className="download-btn"
-                  title="Download Receipt"
-                 >
-                📄
-                 </button>
-                </td>
+                  <td>
+                    <button 
+                      onClick={() => downloadReceipt(payment.reference)}
+                      className="download-btn"
+                      title="Download Receipt"
+                    >
+                      📄
+                    </button>
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -192,142 +229,165 @@ export default function AdminPaymentsPage() {
 
       <style jsx>{`
         .admin-container {
-  padding: 20px;
-  max-width: 1200px;
-  margin: 0 auto;
-}
-h1 {
-  color: #2c5530;
-  margin-bottom: 30px;
-  font-size: 2.5rem; /* Made bigger */
-  font-weight: bold; /* Made bold */
-}
-.stats-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 20px;
-  margin-bottom: 30px;
-}
-.stat-card {
-  background: white;
-  padding: 20px;
-  border-radius: 10px;
-  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-  text-align: center;
-}
-.stat-card h3 {
-  color: #000000; /* Changed to black */
-  font-weight: 600;
-  margin-bottom: 10px;
-  font-size: 1.1rem;
-}
-.stat-number {
-  font-size: 2.2em; /* Made bigger */
-  font-weight: bold;
-  margin: 10px 0;
-  color: #676666ff; /* Changed to black - for N0.00 and 0 */
-}
-.stat-number.success {
-  color: #28a745; /* Changed from green to black */
-}
-.stat-number.error {
-  color: #dc3545; /* Changed from red to black */
-}
-.filters {
-  display: flex;
-  gap: 10px;
-  margin-bottom: 20px;
-}
-.filters button {
-  padding: 10px 20px;
-  border: 1px solid #ddd;
-  background: white;
-  border-radius: 6px;
-  cursor: pointer;
-  color: #000000; /* Text color black */
-  font-weight: 500;
-}
-.filters button.active {
-  background: #2c5530;
-  color: white; /* Keep white for active */
-  border-color: #2c5530;
-}
-.refresh-btn {
-  background: #2c5530; /* Changed from teal to green */
-  color: white; /* Keep white text */
-  border: none;
-}
-.payments-table {
-  background: white;
-  border-radius: 10px;
-  overflow: hidden;
-  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-}
-table {
-  width: 100%;
-  border-collapse: collapse;
-}
-th, td {
-  padding: 15px;
-  text-align: left;
-  border-bottom: 1px solid #eee;
-  color: #000000;
-}
-th {
-  background: #f8f9fa;
-  font-weight: 600;
-  color: #333;
-}
-.reference {
-  font-family: monospace;
-  font-size: 12px;
-  color: #666;
-}
-.amount {
-  font-weight: bold;
-  color: #2c5530;
-}
-.method-badge, .status-badge {
-  padding: 4px 8px;
-  border-radius: 4px;
-  font-size: 12px;
-  font-weight: 600;
-}
-.method-badge.card {
-  background: #e8f5e8;
-  color: #2c5530;
-}
-.method-badge.bank_transfer {
-  background: #e3f2fd;
-  color: #1565c0;
-}
-.status-badge.completed {
-  background: #e8f5e8;
-  color: #000000; /* Changed to black */
-}
-.status-badge.failed {
-  background: #f8d7da;
-  color: #000000; /* Changed to black */
-}
-.loading, .empty-state {
-  text-align: center;
-  padding: 40px;
-  background: white;
-  border-radius: 10px;
-  color: #666;
-}
-  .download-btn {
-  background: none;
-  border: none;
-  cursor: pointer;
-  font-size: 16px;
-  padding: 5px 10px;
-  border-radius: 4px;
-  transition: background 0.2s;
-}
-.download-btn:hover {
-  background: #f0f0f0;
-}
+          padding: 20px;
+          max-width: 1200px;
+          margin: 0 auto;
+        }
+        h1 {
+          color: #2c5530;
+          margin-bottom: 30px;
+          font-size: 2.5rem;
+          font-weight: bold;
+        }
+        .stats-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+          gap: 20px;
+          margin-bottom: 30px;
+        }
+        .stat-card {
+          background: white;
+          padding: 20px;
+          border-radius: 10px;
+          box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+          text-align: center;
+        }
+        .stat-card h3 {
+          color: #000000;
+          font-weight: 600;
+          margin-bottom: 10px;
+          font-size: 1.1rem;
+        }
+        .stat-number {
+          font-size: 2.2em;
+          font-weight: bold;
+          margin: 10px 0;
+          color: #676666ff;
+        }
+        .stat-number.success {
+          color: #28a745;
+        }
+        .stat-number.error {
+          color: #dc3545;
+        }
+        .filters {
+          display: flex;
+          gap: 10px;
+          margin-bottom: 20px;
+        }
+        .filters button {
+          padding: 10px 20px;
+          border: 1px solid #ddd;
+          background: white;
+          border-radius: 6px;
+          cursor: pointer;
+          color: #000000;
+          font-weight: 500;
+        }
+        .filters button.active {
+          background: #2c5530;
+          color: white;
+          border-color: #2c5530;
+        }
+        .refresh-btn {
+          background: #2c5530;
+          color: white;
+          border: none;
+        }
+        .id-filter-badge {
+          background: #e3f2fd;
+          padding: 10px 15px;
+          border-radius: 6px;
+          margin-bottom: 20px;
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          color: #000000;
+        }
+        .id-filter-badge button {
+          background: none;
+          border: 1px solid #1565c0;
+          color: #1565c0;
+          padding: 4px 8px;
+          border-radius: 4px;
+          cursor: pointer;
+          font-size: 12px;
+        }
+        .id-filter-badge button:hover {
+          background: #1565c0;
+          color: white;
+        }
+        .payments-table {
+          background: white;
+          border-radius: 10px;
+          overflow: hidden;
+          box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        table {
+          width: 100%;
+          border-collapse: collapse;
+        }
+        th, td {
+          padding: 15px;
+          text-align: left;
+          border-bottom: 1px solid #eee;
+          color: #000000;
+        }
+        th {
+          background: #f8f9fa;
+          font-weight: 600;
+          color: #333;
+        }
+        .reference {
+          font-family: monospace;
+          font-size: 12px;
+          color: #666;
+        }
+        .amount {
+          font-weight: bold;
+          color: #2c5530;
+        }
+        .method-badge, .status-badge {
+          padding: 4px 8px;
+          border-radius: 4px;
+          font-size: 12px;
+          font-weight: 600;
+        }
+        .method-badge.card {
+          background: #e8f5e8;
+          color: #2c5530;
+        }
+        .method-badge.bank_transfer {
+          background: #e3f2fd;
+          color: #1565c0;
+        }
+        .status-badge.completed {
+          background: #e8f5e8;
+          color: #000000;
+        }
+        .status-badge.failed {
+          background: #f8d7da;
+          color: #000000;
+        }
+        .loading, .empty-state {
+          text-align: center;
+          padding: 40px;
+          background: white;
+          border-radius: 10px;
+          color: #666;
+        }
+        .download-btn {
+          background: none;
+          border: none;
+          cursor: pointer;
+          font-size: 16px;
+          padding: 5px 10px;
+          border-radius: 4px;
+          transition: background 0.2s;
+        }
+        .download-btn:hover {
+          background: #f0f0f0;
+        }
       `}</style>
     </div>
   );

@@ -1,16 +1,11 @@
 'use client';
-import { Suspense } from 'react';
-import ConsultContent from './ConsultContent';
-
+import { useState, useEffect } from 'react';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation'; // Only useRouter now
+import { useLanguage } from '../context/LanguageContext';
+import dynamicImport from 'next/dynamic';
 export const dynamic = 'force-dynamic';
 
-export default function ConsultPage() {
-  return (
-    <Suspense fallback={<div>Loading consultation page...</div>}>
-      <ConsultContent />
-    </Suspense>
-  );
-}
 // Dynamically import the video call component (SSR disabled)
 const AgoraVideoCall = dynamicImport(() => import('../components/RealVideoCall'), {
   ssr: false,
@@ -30,7 +25,7 @@ const translations = {
     selectInsurance: "Select your insurance", 
     noInsurance: "No insurance",
     insuranceNote: "We'll help verify coverage with your provider",
-     travel: "Travel & Stay",
+    travel: "Travel & Stay",
     bookFlights: "Book Flights", 
     findHotels: "Find Hotels",
     medicalTourism: "Medical Tourism",
@@ -201,7 +196,7 @@ const translations = {
     selectInsurance: "Seleccione su seguro", 
     noInsurance: "Sin seguro",
     insuranceNote: "Le ayudaremos a verificar la cobertura con su aseguradora",
-     travel: "Viajar & Alojarse",
+    travel: "Viajar & Alojarse",
     bookFlights: "Reservar Vuelos", 
     findHotels: "Encontrar Hoteles",
     medicalTourism: "Turismo Médico",
@@ -287,12 +282,22 @@ const consultationTypes = {
 
 export default function ConsultPage() {
   
-  const searchParams = useSearchParams();
   const router = useRouter();
   
-  // Get payment status from URL
-  const paymentRef = searchParams.get('payment');
-  const paymentVerified = searchParams.get('verified') === 'true';
+  // Get payment status from URL using window.location
+  const [paymentRef, setPaymentRef] = useState('');
+  const [paymentVerified, setPaymentVerified] = useState(false);
+  const [id, setId] = useState('');
+
+  // Extract URL parameters on client side
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      setId(params.get('id') || '');
+      setPaymentRef(params.get('payment') || '');
+      setPaymentVerified(params.get('verified') === 'true');
+    }
+  }, []);
 
   const { language } = useLanguage();
   const t = translations[language] || translations.en;
@@ -458,6 +463,57 @@ export default function ConsultPage() {
     followUp: "Return in 5 days if no improvement",
     prescriptionId: `RX-${Date.now().toString().slice(-6)}`
   };
+
+  // Save prescription to database function
+  const savePrescriptionToDB = async (prescriptionData) => {
+    try {
+      const response = await fetch('/api/prescriptions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(prescriptionData)
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to save prescription');
+      }
+      
+      const result = await response.json();
+      console.log('✅ Prescription saved:', result);
+      return result;
+    } catch (error) {
+      console.error('❌ Error saving prescription:', error);
+      // Still show prescription even if save fails
+      return { prescription: prescriptionData };
+    }
+  };
+
+  // Updated generatePrescription function
+  async function handleGeneratePrescription() {
+    const prescriptionToSave = {
+      prescriptionId: prescriptionData.prescriptionId,
+      patientName: prescriptionData.patientName,
+      patientAge: prescriptionData.patientAge,
+      patientGender: prescriptionData.patientGender,
+      doctorName: prescriptionData.doctor,
+      doctorLicense: prescriptionData.doctorLicense,
+      diagnosis: prescriptionData.diagnosis,
+      medications: prescriptionData.medications,
+      instructions: prescriptionData.instructions,
+      followUp: prescriptionData.followUp
+    };
+
+    const result = await savePrescriptionToDB(prescriptionToSave);
+    
+    if (result.prescription) {
+      setShowPrescription(true);
+      alert('✅ Prescription saved securely! Show the code to any partner pharmacy.');
+    } else {
+      setShowPrescription(true);
+      alert('⚠️ Prescription generated (offline mode)');
+    }
+  }
 
   return (
     <section className="container consult">
@@ -643,25 +699,25 @@ export default function ConsultPage() {
         </form>
       ) : (
         <div className="card match">
-<div className="match-header">
-  <img src="/quickmed-icon.png" alt="QuickMed" width={40} height={40} className="match-icon" />
-  <div>
-    <div className="match-name">{match.name}</div>
-    <div className="match-sub">
-      {match.specialty} • ⭐ {match.rating} • ETA {match.eta}
-    </div>
-    <div className="consult-type-badge">
-      {match.consultationType === 'chat' && `💬 ${t.chatConsultation}`}
-      {match.consultationType === 'call' && `📞 ${t.voiceCall}`}  
-      {match.consultationType === 'video' && `🎥 ${t.videoCall}`}
-    </div>
-    {match.travelMode && (
-      <div className="travel-badge">
-        🧳 Travel Mode • Language: {match.language}
-      </div>
-    )}
-  </div>
-</div>
+          <div className="match-header">
+            <img src="/quickmed-icon.png" alt="QuickMed" width={40} height={40} className="match-icon" />
+            <div>
+              <div className="match-name">{match.name}</div>
+              <div className="match-sub">
+                {match.specialty} • ⭐ {match.rating} • ETA {match.eta}
+              </div>
+              <div className="consult-type-badge">
+                {match.consultationType === 'chat' && `💬 ${t.chatConsultation}`}
+                {match.consultationType === 'call' && `📞 ${t.voiceCall}`}  
+                {match.consultationType === 'video' && `🎥 ${t.videoCall}`}
+              </div>
+              {match.travelMode && (
+                <div className="travel-badge">
+                  🧳 Travel Mode • Language: {match.language}
+                </div>
+              )}
+            </div>
+          </div>
           <div className="insurance-section">
             <p className="insurance-label">Accepts Insurance:</p>
             <div className="insurance-badges">
@@ -696,58 +752,57 @@ export default function ConsultPage() {
             <div className="text">{match.advice}</div>
           </div>
 
-<div className="row">
-{match.consultationType === 'video' ? (
-  <div style={{width: '100%', marginBottom: '16px'}}>
-    {/* Show payment status */}
-    {paymentVerified ? (
-      <div style={{background: '#d4edda', padding: '10px', borderRadius: '5px', marginBottom: '10px'}}>
-        ✅ Payment Verified - Video Call Ready
-      </div>
-    ) : (
-      <div style={{background: '#fff3cd', padding: '10px', borderRadius: '5px', marginBottom: '10px'}}>
-        ⏳ Payment Required - Complete payment to start video call
-      </div>
-    )}
-    
-    <AgoraVideoCall 
-      patientInfo={{
-        name: form.name || 'Patient',
-        symptoms: form.symptoms
-      }}
-      autoStart={paymentVerified} // Auto-start if payment verified
-      onCallEnd={() => {
-        console.log('Video consultation completed');
-        alert('Video consultation ended successfully!');
-      }}
-    />
-  </div>
-) : (
+          <div className="row">
+            {match.consultationType === 'video' ? (
+              <div style={{width: '100%', marginBottom: '16px'}}>
+                {/* Show payment status */}
+                {paymentVerified ? (
+                  <div style={{background: '#d4edda', padding: '10px', borderRadius: '5px', marginBottom: '10px'}}>
+                    ✅ Payment Verified - Video Call Ready
+                  </div>
+                ) : (
+                  <div style={{background: '#fff3cd', padding: '10px', borderRadius: '5px', marginBottom: '10px'}}>
+                    ⏳ Payment Required - Complete payment to start video call
+                  </div>
+                )}
+                
+                <AgoraVideoCall 
+                  patientInfo={{
+                    name: form.name || 'Patient',
+                    symptoms: form.symptoms
+                  }}
+                  autoStart={paymentVerified} // Auto-start if payment verified
+                  onCallEnd={() => {
+                    console.log('Video consultation completed');
+                    alert('Video consultation ended successfully!');
+                  }}
+                />
+              </div>
+            ) : (
+              <button
+                className="btn btn-primary"
+                onClick={() => alert(`Starting ${match.consultationType} consultation (demo)`)}
+              >
+                {match.consultationType === 'chat' && t.startChat}
+                {match.consultationType === 'call' && t.callDoctor}
+                {match.consultationType === 'video' && t.startVideo}
+              </button>
+            )}
+            
+            <Link 
+              href={`/payment?type=${form.consultationType}&doctor=${match.name}&amount=${consultationTypes[form.consultationType]?.price}&name=${form.name}&email=${form.phone}&symptoms=${encodeURIComponent(form.symptoms)}&city=${form.city}`}
+              className="btn btn-primary"
+            >
+              💳 Proceed to Payment
+            </Link>
 
-    <button
-      className="btn btn-primary"
-      onClick={() => alert(`Starting ${match.consultationType} consultation (demo)`)}
-    >
-      {match.consultationType === 'chat' && t.startChat}
-      {match.consultationType === 'call' && t.callDoctor}
-      {match.consultationType === 'video' && t.startVideo}
-    </button>
-  )}
-  
- <Link 
-  href={`/payment?type=${form.consultationType}&doctor=${match.name}&amount=${consultationTypes[form.consultationType]?.price}&name=${form.name}&email=${form.phone}&symptoms=${encodeURIComponent(form.symptoms)}&city=${form.city}`}
-  className="btn btn-primary"
->
-  💳 Proceed to Payment
-</Link>
-
-  <button
-    className="btn btn-secondary"
-    onClick={generatePrescription}
-  >
-    📋 {t.getEprescription}
-  </button>
-</div>
+            <button
+              className="btn btn-secondary"
+              onClick={handleGeneratePrescription}
+            >
+              📋 {t.getEprescription}
+            </button>
+          </div>
 
           <div className="row">
             <button
@@ -778,12 +833,12 @@ export default function ConsultPage() {
         <div className="card prescription-card">
           <div className="prescription-header">
             <div className="prescription-logo">
-  <img src="/quickmed-icon.png" alt="QuickMed Care" width={50} height={50} />
-  <div>
-    <h2>QuickMed Care</h2>
-    <p>Secure Digital Prescription</p>
-  </div>
-</div>
+              <img src="/quickmed-icon.png" alt="QuickMed Care" width={50} height={50} />
+              <div>
+                <h2>QuickMed Care</h2>
+                <p>Secure Digital Prescription</p>
+              </div>
+            </div>
             <div className="prescription-id">
               <strong>Prescription ID:</strong> {prescriptionData.prescriptionId}
             </div>
@@ -918,54 +973,4 @@ export default function ConsultPage() {
       )}
     </section>
   );
-}
-// Update these functions in your ConsultPage component
-const savePrescriptionToDB = async (prescriptionData) => {
-  try {
-    const response = await fetch('/api/prescriptions', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(prescriptionData)
-    });
-    
-    if (!response.ok) {
-      throw new Error('Failed to save prescription');
-    }
-    
-    const result = await response.json();
-    console.log('✅ Prescription saved:', result);
-    return result;
-  } catch (error) {
-    console.error('❌ Error saving prescription:', error);
-    // Still show prescription even if save fails
-    return { prescription: prescriptionData };
-  }
-};
-
-// Update generatePrescription function
-async function generatePrescription() {
-  const prescriptionToSave = {
-    prescriptionId: prescriptionData.prescriptionId,
-    patientName: prescriptionData.patientName,
-    patientAge: prescriptionData.patientAge,
-    patientGender: prescriptionData.patientGender,
-    doctorName: prescriptionData.doctor,
-    doctorLicense: prescriptionData.doctorLicense,
-    diagnosis: prescriptionData.diagnosis,
-    medications: prescriptionData.medications,
-    instructions: prescriptionData.instructions,
-    followUp: prescriptionData.followUp
-  };
-
-  const result = await savePrescriptionToDB(prescriptionToSave);
-  
-  if (result.prescription) {
-    setShowPrescription(true);
-    alert('✅ Prescription saved securely! Show the code to any partner pharmacy.');
-  } else {
-    setShowPrescription(true);
-    alert('⚠️ Prescription generated (offline mode)');
-  }
 }

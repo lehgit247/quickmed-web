@@ -1,52 +1,53 @@
 'use client';
-import { Suspense } from 'react';
-import VerifyContent from './VerifyContent';
-
+import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 export const dynamic = 'force-dynamic';
-
-export default function VerifyPage() {
-  return (
-    <Suspense fallback={<div>Loading payment verification...</div>}>
-      <VerifyContent />
-    </Suspense>
-  );
-}
 
 export default function PaymentVerify() {
   const [status, setStatus] = useState('verifying');
-  const searchParams = useSearchParams();
+  const [reference, setReference] = useState('');
+  const [id, setId] = useState('');
   const router = useRouter();
 
-  const reference = searchParams.get('reference') || searchParams.get('trxref');
-
+  // Extract URL parameters on client side
   useEffect(() => {
-    if (reference) {
-      // Verify payment with your API
-      verifyPayment(reference);
-    } else {
-      setStatus('error');
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      const ref = params.get('reference') || params.get('trxref');
+      const urlId = params.get('id');
+      
+      setReference(ref || '');
+      setId(urlId || '');
+      
+      if (ref) {
+        // Verify payment with your API
+        verifyPayment(ref);
+      } else {
+        setStatus('error');
+      }
     }
-  }, [reference]);
+  }, []);
 
   const verifyPayment = async (ref) => {
     try {
       const response = await fetch(`/api/payment/verify?reference=${ref}`);
       const data = await response.json();
       
-     if (data.success) {
-  setStatus('success');
-  
-  // Get original patient data from localStorage or URL
-  const patientData = JSON.parse(localStorage.getItem('patientData') || '{}');
-  
-  // Redirect back to consult page WITH payment reference
-  setTimeout(() => {
-    router.push(`/consult?payment=${reference}&verified=true`);
-  }, 3000);
+      if (data.success) {
+        setStatus('success');
+        
+        // Get original patient data from localStorage or URL
+        const patientData = JSON.parse(localStorage.getItem('patientData') || '{}');
+        
+        // Redirect back to consult page WITH payment reference
+        setTimeout(() => {
+          router.push(`/consult?payment=${ref}&verified=true${id ? `&id=${id}` : ''}`);
+        }, 3000);
       } else {
         setStatus('failed');
       }
     } catch (error) {
+      console.error('Payment verification error:', error);
       setStatus('error');
     }
   };
@@ -74,7 +75,9 @@ export default function PaymentVerify() {
         <>
           <h1>❌ Payment Failed</h1>
           <p>Your payment could not be processed.</p>
-          <button onClick={() => router.push('/payment')}>Try Again</button>
+          <button onClick={() => router.push('/payment')} style={styles.button}>
+            Try Again
+          </button>
         </>
       )}
       
@@ -82,6 +85,9 @@ export default function PaymentVerify() {
         <>
           <h1>⚠️ Error</h1>
           <p>Something went wrong. Please contact support.</p>
+          <button onClick={() => router.push('/')} style={styles.button}>
+            Go Home
+          </button>
         </>
       )}
     </div>
@@ -94,6 +100,11 @@ const styles = {
     padding: '50px',
     maxWidth: '600px',
     margin: '0 auto',
+    minHeight: '100vh',
+    display: 'flex',
+    flexDirection: 'column',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   spinner: {
     width: '50px',
@@ -104,4 +115,26 @@ const styles = {
     animation: 'spin 1s linear infinite',
     margin: '20px auto',
   },
+  button: {
+    padding: '12px 24px',
+    fontSize: '16px',
+    backgroundColor: '#2c5530',
+    color: 'white',
+    border: 'none',
+    borderRadius: '6px',
+    cursor: 'pointer',
+    marginTop: '20px',
+  }
 };
+
+// Add the keyframe animation
+if (typeof document !== 'undefined') {
+  const style = document.createElement('style');
+  style.innerHTML = `
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+  `;
+  document.head.appendChild(style);
+}
