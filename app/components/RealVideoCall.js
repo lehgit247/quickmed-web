@@ -1,301 +1,378 @@
 'use client';
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
+import AgoraRTC from 'agora-rtc-sdk-ng';
 
-export default function RealVideoCall({ onCallEnd = () => {}, patientInfo = {}, autoStart = false }) {
-  const [agoraEngine, setAgoraEngine] = useState(null);
-  const [localTracks, setLocalTracks] = useState([]);
+export default function RealVideoCall({ patientInfo, autoStart = false, onCallEnd }) {
   const [isJoined, setIsJoined] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState('');
-  const [channelName, setChannelName] = useState('');
-  const [doctorJoined, setDoctorJoined] = useState(false);
+  const [localVideoTrack, setLocalVideoTrack] = useState(null);
+  const [localAudioTrack, setLocalAudioTrack] = useState(null);
+  const [remoteUsers, setRemoteUsers] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState(null);
   
-  const localPlayerRef = useRef(null);
-  const remotePlayerRef = useRef(null);
+  const clientRef = useRef(null);
+  const localVideoRef = useRef(null);
+  const remoteVideoRefs = useRef({});
+  const joinInProgressRef = useRef(false);
+  const channelNameRef = useRef('');
+  const mountedRef = useRef(true);
 
-  // HARDCODE YOUR AGORA APP ID FOR NOW
-  const AGORA_APP_ID = '8f04fd597fc04f18841f26ed5a33dc66';
-
+  // Cleanup function
   const cleanup = useCallback(async () => {
-    console.log('🧹 Cleaning up patient media tracks...');
+    if (!mountedRef.current) return;
+    
+    console.log('🧹 Cleaning up video call...');
     
     try {
-      // Stop and close all local tracks
-      localTracks.forEach(track => {
-        if (track) {
-          track.stop();
-          track.close();
-        }
-      });
-      
-      // Leave channel
-      if (agoraEngine) {
-        await agoraEngine.leave();
-        console.log('✅ Patient left channel');
+      // Leave channel if joined
+      if (clientRef.current && isJoined) {
+        await clientRef.current.leave();
+        console.log('✅ Left channel');
       }
       
-      setLocalTracks([]);
+      // Close local tracks
+      if (localVideoTrack) {
+        localVideoTrack.close();
+        setLocalVideoTrack(null);
+      }
+      if (localAudioTrack) {
+        localAudioTrack.close();
+        setLocalAudioTrack(null);
+      }
+      
+      // Remove client
+      if (clientRef.current) {
+        clientRef.current.removeAllListeners();
+        clientRef.current = null;
+      }
+      
       setIsJoined(false);
-      setDoctorJoined(false);
+      setRemoteUsers([]);
+      joinInProgressRef.current = false;
+      
+      if (onCallEnd) onCallEnd();
+    } catch (error) {
+      console.error('Error during cleanup:', error);
+    }
+  }, [isJoined, localVideoTrack, localAudioTrack, onCallEnd]);
+
+  // Initialize and join call
+  const joinCall = useCallback(async () => {
+    // Prevent multiple join attempts
+    if (joinInProgressRef.current || isJoined || !mountedRef.current) {
+      console.log('Join already in progress or already joined');
+      return;
+    }
+
+    joinInProgressRef.current = true;
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      // Check if App ID is configured
+      const appId = process.env.NEXT_PUBLIC_AGORA_APP_ID;
+      if (!appId || appId === 'your_agora_app_id_here') {
+        throw new Error('Agora App ID not configured. Please add it to your .env.local file');
+      }
+
+      // Generate a unique channel name
+      const channelName = `consult_${Math.floor(Math.random() * 1000000)}`;
+      channelNameRef.current = channelName;
+
+      console.log('🔑 Using App ID:', appId);
+      console.log('📺 Channel:', channelName);
+
+      // Generate token (in production, get this from your backend)
+      const token = null; // For testing with low security mode
+      
+      // Create client if it doesn't exist
+      if (!clientRef.current) {
+        clientRef.current = AgoraRTC.createClient({ mode: 'rtc', codec: 'vp8' });
+        
+        // Set up event listeners
+        clientRef.current.on('user-published', handleUserPublished);
+        clientRef.current.on('user-unpublished', handleUserUnpublished);
+        clientRef.current.on('user-joined', handleUserJoined);
+        clientRef.current.on('user-left', handleUserLeft);
+      }
+
+      // Join channel
+      await clientRef.current.join(appId, channelName, token, null);
+      console.log('✅ Joined channel successfully');
+
+      // Create local tracks
+      const audioTrack = await AgoraRTC.createMicrophoneAudioTrack();
+      const videoTrack = await AgoraRTC.createCameraVideoTrack();
+      
+      setLocalAudioTrack(audioTrack);
+      setLocalVideoTrack(videoTrack);
+
+      // Play local video
+      if (localVideoRef.current) {
+        videoTrack.play(localVideoRef.current);
+      }
+
+      // Publish local tracks
+      await clientRef.current.publish([audioTrack, videoTrack]);
+      console.log('📡 Published local tracks');
+
+      setIsJoined(true);
       
     } catch (error) {
-      console.error('❌ Error during cleanup:', error);
-    }
-  }, [agoraEngine, localTracks]);
-
-  const requestConsultation = async () => {
-    // For now, use mock data to test Agora connection
-    console.log('🚀 Starting video consultation');
-    const channel = `consult_${Date.now().toString().slice(-6)}`;
-    return {
-      success: true,
-      channelName: channel,
-      token: null // Using null token for testing
-    };
-  };
-
-  const initializeAgora = useCallback(async () => {
-    try {
-      setIsLoading(true);
+      console.error('❌ Failed to join call:', error);
+      setError(error.message || 'Failed to join video call');
       
-      // Request consultation
-      const consultationData = await requestConsultation();
-      
-      if (!consultationData.success) {
-        throw new Error(consultationData.error || 'Failed to request consultation');
-      }
-
-      console.log('✅ Consultation requested. Channel:', consultationData.channelName);
-      console.log('🔑 Using App ID:', AGORA_APP_ID);
-      setChannelName(consultationData.channelName);
-
-      // Initialize Agora with the channel
-      const AgoraRTC = (await import('agora-rtc-sdk-ng')).default;
-      
-      const engine = AgoraRTC.createClient({ mode: 'rtc', codec: 'vp8' });
-      setAgoraEngine(engine);
-
-      // Setup event listeners BEFORE joining
-      engine.on('user-published', async (user, mediaType) => {
-        console.log('🟢 Doctor published stream:', user.uid, mediaType);
-        await engine.subscribe(user, mediaType);
-        console.log('✅ Subscribed to doctor:', user.uid);
-
-        if (mediaType === 'video' && remotePlayerRef.current) {
-          user.videoTrack.play(remotePlayerRef.current);
-          setDoctorJoined(true);
-          console.log('🎥 Doctor video is now playing');
-        }
-        
-        if (mediaType === 'audio') {
-          user.audioTrack.play();
-          console.log('🔊 Doctor audio is now playing');
-        }
-      });
-
-      engine.on('user-joined', (user) => {
-        console.log('🟢 Doctor joined the channel:', user.uid);
-        setDoctorJoined(true);
-      });
-
-      engine.on('user-left', (user) => {
-        console.log('🔴 Doctor left the channel:', user.uid);
-        setDoctorJoined(false);
-      });
-
-      // Join the channel with TEMPORARY TOKEN (null for testing)
-      // In production, you should get a proper token from your backend
-      const uid = Math.floor(Math.random() * 10000);
-      
-      console.log('🔗 Joining channel...');
-      console.log('App ID:', AGORA_APP_ID);
-      console.log('Channel:', consultationData.channelName);
-      console.log('UID:', uid);
-      
-      await engine.join(
-        AGORA_APP_ID,
-        consultationData.channelName,
-        null, // Using null token for testing
-        uid
-      );
-      
-      console.log('✅ Patient joined channel successfully:', consultationData.channelName);
-      setIsJoined(true);
-
-      // Create and publish local tracks
-      const localAudioTrack = await AgoraRTC.createMicrophoneAudioTrack();
-      const localVideoTrack = await AgoraRTC.createCameraVideoTrack();
-
-      // Store tracks for cleanup
-      setLocalTracks([localAudioTrack, localVideoTrack]);
-
-      await engine.publish([localAudioTrack, localVideoTrack]);
-      console.log('✅ Patient tracks published');
-
-      // Setup local video element
-      if (localPlayerRef.current) {
-        localVideoTrack.play(localPlayerRef.current);
-      }
-
-      setIsLoading(false);
-
-    } catch (err) {
-      console.error('❌ Agora initialization failed:', err);
-      setError(`Video call failed: ${err.message}`);
+      // Cleanup on error
+      await cleanup();
+    } finally {
+      joinInProgressRef.current = false;
       setIsLoading(false);
     }
-  }, [AGORA_APP_ID]);
+  }, [cleanup]);
 
+  // Event handlers
+  const handleUserPublished = useCallback(async (user, mediaType) => {
+    console.log(`👤 User published: ${user.uid}, mediaType: ${mediaType}`);
+    
+    await clientRef.current.subscribe(user, mediaType);
+    console.log(`✅ Subscribed to user ${user.uid}`);
+
+    if (mediaType === 'video') {
+      setRemoteUsers(prev => {
+        if (!prev.find(u => u.uid === user.uid)) {
+          return [...prev, user];
+        }
+        return prev;
+      });
+
+      // Play remote video after state update
+      setTimeout(() => {
+        const remoteVideoContainer = remoteVideoRefs.current[user.uid];
+        if (remoteVideoContainer && user.videoTrack) {
+          user.videoTrack.play(remoteVideoContainer);
+        }
+      }, 100);
+    }
+
+    if (mediaType === 'audio') {
+      user.audioTrack?.play();
+    }
+  }, []);
+
+  const handleUserUnpublished = useCallback((user, mediaType) => {
+    console.log(`👤 User unpublished: ${user.uid}, mediaType: ${mediaType}`);
+    if (mediaType === 'video') {
+      // Video track unpublished
+    }
+  }, []);
+
+  const handleUserJoined = useCallback((user) => {
+    console.log(`👤 User joined: ${user.uid}`);
+  }, []);
+
+  const handleUserLeft = useCallback((user) => {
+    console.log(`👤 User left: ${user.uid}`);
+    setRemoteUsers(prev => prev.filter(u => u.uid !== user.uid));
+  }, []);
+
+  // Auto-start if enabled
   useEffect(() => {
-    initializeAgora();
+    if (autoStart && !isJoined && !isLoading && !joinInProgressRef.current) {
+      joinCall();
+    }
+  }, [autoStart, isJoined, isLoading, joinCall]);
+
+  // Mount/unmount handling
+  useEffect(() => {
+    mountedRef.current = true;
     
     return () => {
+      mountedRef.current = false;
       cleanup();
     };
-  }, [initializeAgora, cleanup]);
+  }, [cleanup]);
 
-  const handleEndCall = async () => {
-    console.log('🔄 Ending patient consultation...');
-    
-    await cleanup();
-    onCallEnd();
+  // Start call handler
+  const handleStartCall = () => {
+    joinCall();
   };
 
-  if (isLoading) {
-    return (
-      <div style={{ padding: '20px', textAlign: 'center', color: 'black' }}>
-        <p>{autoStart ? '🚀 Starting paid consultation...' : '🔄 Requesting video consultation...'}</p>
-        <p style={{ fontSize: '14px', color: '#666' }}>Setting up your camera and microphone</p>
-        <p style={{ fontSize: '12px', color: '#888' }}>Channel: {channelName || 'Creating...'}</p>
-        {autoStart && (
-          <p style={{ fontSize: '12px', color: '#28a745', marginTop: '5px' }}>
-            ⚡ Premium: No waiting time
-          </p>
-        )}
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div style={{ padding: '20px', color: 'black' }}>
-        <p style={{ color: 'red', marginBottom: '10px' }}>{error}</p>
-        <button 
-          onClick={handleEndCall}
-          style={{ padding: '10px 20px', background: '#dc3545', color: 'white', border: 'none' }}
-        >
-          Close
-        </button>
-      </div>
-    );
-  }
+  // End call handler
+  const handleEndCall = async () => {
+    await cleanup();
+  };
 
   return (
-    <div style={{ color: 'black', border: '1px solid #ccc', padding: '20px', margin: '10px 0' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
-        <h3>🎥 Video Consultation {doctorJoined ? '- Connected! 🟢' : '- Waiting for Doctor 🟡'}</h3>
-        {autoStart && (
-          <span style={{ 
-            background: '#28a745', 
-            color: 'white', 
-            padding: '4px 8px', 
-            borderRadius: '4px', 
-            fontSize: '12px',
-            fontWeight: 'bold'
-          }}>
-            PREMIUM
-          </span>
-        )}
-      </div>
-      
-      <p style={{ color: doctorJoined ? '#28a745' : '#ffa500', fontSize: '14px', marginBottom: '20px' }}>
-        {autoStart ? 
-          (doctorJoined ? '✅ Doctor is in the call!' : '⏳ Connecting to doctor...') :
-          (doctorJoined ? '✅ Doctor is in the call!' : '⏳ Doctor has been notified and will join shortly...')
-        }
-      </p>
-      
-      <div style={{ display: 'flex', gap: '20px', marginBottom: '20px', flexWrap: 'wrap' }}>
-        <div>
-          <h4>Your Video</h4>
-          <div 
-            ref={localPlayerRef}
-            style={{ 
-              width: '300px', 
-              height: '200px', 
-              border: '2px solid #007bff',
-              borderRadius: '8px',
-              backgroundColor: '#000'
-            }}
-          ></div>
-        </div>
-        
-        <div>
-          <h4>Doctor&apos;s Video</h4>
-          <div 
-            ref={remotePlayerRef}
-            style={{ 
-              width: '300px', 
-              height: '200px', 
-              border: doctorJoined ? '2px solid #28a745' : '2px dashed #ffa500',
-              borderRadius: '8px',
-              backgroundColor: doctorJoined ? '#000' : '#fff9e6',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              color: doctorJoined ? 'white' : '#666'
-            }}
+    <div className="video-call-container">
+      <div className="video-call-header">
+        <h3>Video Consultation {patientInfo?.name && `- Dr. ${patientInfo.name}`}</h3>
+        {!isJoined && !isLoading && !error && (
+          <button 
+            onClick={handleStartCall}
+            className="start-call-btn"
+            disabled={isLoading}
           >
-            {doctorJoined ? (
-              <p>Doctor is connected! 🎥</p>
-            ) : (
-              <div style={{ textAlign: 'center' }}>
-                <p style={{ fontSize: '16px', marginBottom: '10px' }}>👨‍⚕️</p>
-                <p>{autoStart ? 'Connecting...' : 'Waiting for doctor to join...'}</p>
-                <p style={{ fontSize: '12px', marginTop: '5px' }}>
-                  {autoStart ? 'Premium connection in progress' : 'They will appear here automatically'}
-                </p>
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
-      
-      <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
-        <button 
-          onClick={handleEndCall}
-          style={{ 
-            padding: '10px 20px', 
-            background: '#dc3545', 
-            color: 'white', 
-            border: 'none',
-            borderRadius: '4px',
-            cursor: 'pointer'
-          }}
-        >
-          📞 End Call
-        </button>
-        
-        <div style={{ color: '#666', fontSize: '14px' }}>
-          Status: {doctorJoined ? '🟢 Connected to Doctor' : '🟡 Waiting for doctor...'}
-        </div>
-        
-        {channelName && (
-          <div style={{ color: '#888', fontSize: '12px' }}>
-            Channel: {channelName}
-          </div>
+            {isLoading ? 'Joining...' : 'Start Video Call'}
+          </button>
         )}
-        
-        {autoStart && !doctorJoined && (
-          <div style={{ color: '#28a745', fontSize: '12px', fontWeight: 'bold' }}>
-            ⚡ Premium connection active
-          </div>
+        {isJoined && (
+          <button 
+            onClick={handleEndCall}
+            className="end-call-btn"
+          >
+            End Call
+          </button>
         )}
       </div>
-      
-      <div style={{ marginTop: '10px', fontSize: '12px', color: '#666' }}>
-        <p>Debug: {isJoined ? 'Joined' : 'Not joined'} | Doctor: {doctorJoined ? 'Connected' : 'Not connected'} | Mode: {autoStart ? 'Premium (Auto-start)' : 'Standard'}</p>
+
+      {error && (
+        <div className="error-message">
+          <p>❌ {error}</p>
+          <button onClick={() => setError(null)}>Dismiss</button>
+        </div>
+      )}
+
+      {isLoading && (
+        <div className="loading-indicator">
+          <div className="spinner"></div>
+          <p>Joining video call...</p>
+        </div>
+      )}
+
+      <div className="video-grid">
+        {/* Local video */}
+        <div className="video-container local-video">
+          <div ref={localVideoRef} className="video-player"></div>
+          <div className="video-label">You {!isJoined && '(Preview)'}</div>
+        </div>
+
+        {/* Remote videos */}
+        {remoteUsers.map(user => (
+          <div key={user.uid} className="video-container remote-video">
+            <div 
+              ref={el => remoteVideoRefs.current[user.uid] = el} 
+              className="video-player"
+            ></div>
+            <div className="video-label">Doctor</div>
+          </div>
+        ))}
       </div>
+
+      <style jsx>{`
+        .video-call-container {
+          width: 100%;
+          background: #f5f5f5;
+          border-radius: 12px;
+          padding: 20px;
+          box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .video-call-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          margin-bottom: 20px;
+        }
+        .video-call-header h3 {
+          color: #000000;
+          margin: 0;
+        }
+        .start-call-btn, .end-call-btn {
+          padding: 10px 20px;
+          border: none;
+          border-radius: 6px;
+          cursor: pointer;
+          font-weight: 600;
+          transition: all 0.2s;
+        }
+        .start-call-btn {
+          background: #2c5530;
+          color: white;
+        }
+        .start-call-btn:hover:not(:disabled) {
+          background: #1e3c22;
+        }
+        .start-call-btn:disabled {
+          opacity: 0.5;
+          cursor: not-allowed;
+        }
+        .end-call-btn {
+          background: #dc3545;
+          color: white;
+        }
+        .end-call-btn:hover {
+          background: #c82333;
+        }
+        .error-message {
+          background: #f8d7da;
+          border: 1px solid #f5c6cb;
+          border-radius: 6px;
+          padding: 15px;
+          margin-bottom: 20px;
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+        }
+        .error-message p {
+          color: #721c24;
+          margin: 0;
+        }
+        .error-message button {
+          background: none;
+          border: 1px solid #721c24;
+          color: #721c24;
+          padding: 5px 10px;
+          border-radius: 4px;
+          cursor: pointer;
+        }
+        .loading-indicator {
+          text-align: center;
+          padding: 30px;
+          background: white;
+          border-radius: 8px;
+          margin-bottom: 20px;
+        }
+        .spinner {
+          width: 40px;
+          height: 40px;
+          border: 4px solid #f3f3f3;
+          border-top: 4px solid #2c5530;
+          border-radius: 50%;
+          animation: spin 1s linear infinite;
+          margin: 0 auto 10px;
+        }
+        .video-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+          gap: 20px;
+          min-height: 300px;
+        }
+        .video-container {
+          position: relative;
+          background: #000;
+          border-radius: 8px;
+          overflow: hidden;
+          aspect-ratio: 16/9;
+        }
+        .video-player {
+          width: 100%;
+          height: 100%;
+          background: #1a1a1a;
+        }
+        .video-label {
+          position: absolute;
+          bottom: 10px;
+          left: 10px;
+          background: rgba(0,0,0,0.6);
+          color: white;
+          padding: 4px 8px;
+          border-radius: 4px;
+          font-size: 12px;
+        }
+        @keyframes spin {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
+        }
+      `}</style>
     </div>
   );
 }

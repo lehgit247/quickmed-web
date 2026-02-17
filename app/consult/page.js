@@ -7,11 +7,12 @@ import dynamicImport from 'next/dynamic';
 export const dynamic = 'force-dynamic';
 import Image from 'next/image';
 
-// Dynamically import the video call component (SSR disabled)
-const AgoraVideoCall = dynamicImport(() => import('../components/RealVideoCall'), {
+const AgoraVideoCall = dynamicImport(() => import('../components/SimpleVideoCall'), {
   ssr: false,
   loading: () => <div>Loading video call...</div>
 });
+
+const [videoCallInitialized, setVideoCallInitialized] = useState(false);
 
 // Translations dictionary
 const translations = {
@@ -299,6 +300,12 @@ export default function ConsultPage() {
       setPaymentVerified(params.get('verified') === 'true');
     }
   }, []);
+
+useEffect(() => {
+  if (match?.consultationType === 'video') {
+    setVideoCallInitialized(false);
+  }
+}, [match]);
 
   const { language } = useLanguage();
   const t = translations[language] || translations.en;
@@ -760,32 +767,35 @@ export default function ConsultPage() {
           </div>
 
           <div className="row">
-            {match.consultationType === 'video' ? (
-              <div style={{width: '100%', marginBottom: '16px'}}>
-                {/* Show payment status */}
-                {paymentVerified ? (
-                  <div style={{background: '#d4edda', padding: '10px', borderRadius: '5px', marginBottom: '10px'}}>
-                    ✅ Payment Verified - Video Call Ready
-                  </div>
-                ) : (
-                  <div style={{background: '#fff3cd', padding: '10px', borderRadius: '5px', marginBottom: '10px'}}>
-                    ⏳ Payment Required - Complete payment to start video call
-                  </div>
-                )}
-                
-                <AgoraVideoCall 
-                  patientInfo={{
-                    name: form.name || 'Patient',
-                    symptoms: form.symptoms
-                  }}
-                  autoStart={paymentVerified} // Auto-start if payment verified
-                  onCallEnd={() => {
-                    console.log('Video consultation completed');
-                    alert('Video consultation ended successfully!');
-                  }}
-                />
-              </div>
-            ) : (
+{match.consultationType === 'video' ? (
+  <div style={{width: '100%', marginBottom: '16px'}}>
+    {/* Show payment status */}
+    {paymentVerified ? (
+      <div style={{background: '#d4edda', padding: '10px', borderRadius: '5px', marginBottom: '10px'}}>
+        ✅ Payment Verified - Video Call Ready
+      </div>
+    ) : (
+      <div style={{background: '#fff3cd', padding: '10px', borderRadius: '5px', marginBottom: '10px'}}>
+        ⏳ Payment Required - Complete payment to start video call
+      </div>
+    )}
+    
+    {/* Add a unique key based on payment status to prevent remounting */}
+    <div key={`video-call-${paymentVerified ? 'active' : 'inactive'}-${Date.now()}`}>
+      <AgoraVideoCall 
+        patientInfo={{
+          name: form.name || 'Patient',
+          symptoms: form.symptoms
+        }}
+        autoStart={paymentVerified} // Auto-start if payment verified
+        onCallEnd={() => {
+          console.log('Video consultation completed');
+          alert('Video consultation ended successfully!');
+        }}
+      />
+    </div>
+  </div>
+) : (
               <button
                 className="btn btn-primary"
                 onClick={() => alert(`Starting ${match.consultationType} consultation (demo)`)}
