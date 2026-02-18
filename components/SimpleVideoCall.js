@@ -6,18 +6,35 @@ export default function SimpleVideoCall({ patientInfo, autoStart = false, onCall
   const [isJoined, setIsJoined] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [hasJoinedOnce, setHasJoinedOnce] = useState(false);
   
+  // Use refs to track state across renders
   const clientRef = useRef(null);
   const localVideoRef = useRef(null);
-  const localAudioTrackRef = useRef(null);
-  const localVideoTrackRef = useRef(null);
+  const hasJoinedRef = useRef(false);
+  const isMountedRef = useRef(true);
   const channelNameRef = useRef(`consult_${Math.floor(Math.random() * 1000000)}`);
 
-  // Initialize Agora
-  useEffect(() => {
-    const appId = process.env.NEXT_PUBLIC_AGORA_APP_ID;
+  // Cleanup function
+  const cleanup = async () => {
+    if (!isMountedRef.current) return;
     
+    try {
+      if (clientRef.current && isJoined) {
+        await clientRef.current.leave();
+      }
+    } catch (error) {
+      console.error('Cleanup error:', error);
+    }
+    
+    clientRef.current = null;
+    hasJoinedRef.current = false;
+  };
+
+  // Initialize Agora once
+  useEffect(() => {
+    isMountedRef.current = true;
+    
+    const appId = process.env.NEXT_PUBLIC_AGORA_APP_ID;
     if (!appId || appId === 'your_agora_app_id_here') {
       setError('Agora App ID not configured');
       return;
@@ -28,52 +45,63 @@ export default function SimpleVideoCall({ patientInfo, autoStart = false, onCall
     
     // Set up event listeners
     clientRef.current.on('user-published', async (user, mediaType) => {
-      await clientRef.current.subscribe(user, mediaType);
-      if (mediaType === 'video') {
-        const remoteVideoContainer = document.getElementById('remote-video');
-        if (remoteVideoContainer) {
-          user.videoTrack.play(remoteVideoContainer);
+      if (!isMountedRef.current) return;
+      
+      try {
+        await clientRef.current.subscribe(user, mediaType);
+        if (mediaType === 'video') {
+          const remoteVideoContainer = document.getElementById('remote-video');
+          if (remoteVideoContainer) {
+            user.videoTrack.play(remoteVideoContainer);
+          }
         }
-      }
-      if (mediaType === 'audio') {
-        user.audioTrack?.play();
+        if (mediaType === 'audio') {
+          user.audioTrack?.play();
+        }
+      } catch (error) {
+        console.error('Subscribe error:', error);
       }
     });
 
     return () => {
-      // Cleanup
-      if (localAudioTrackRef.current) {
-        localAudioTrackRef.current.close();
-      }
-      if (localVideoTrackRef.current) {
-        localVideoTrackRef.current.close();
-      }
-      if (clientRef.current && isJoined) {
-        clientRef.current.leave();
-      }
+      isMountedRef.current = false;
+      cleanup();
     };
   }, []);
 
   const joinCall = async () => {
-    if (isLoading || isJoined || hasJoinedOnce) return;
-    
+    // Prevent multiple join attempts
+    if (hasJoinedRef.current || isLoading || isJoined) {
+      console.log('Join already in progress or completed');
+      return;
+    }
+
+    hasJoinedRef.current = true;
     setIsLoading(true);
     setError(null);
-    setHasJoinedOnce(true);
 
     try {
       const appId = process.env.NEXT_PUBLIC_AGORA_APP_ID;
       
+      if (!clientRef.current) {
+        throw new Error('Client not initialized');
+      }
+
       // Join channel
       await clientRef.current.join(appId, channelNameRef.current, null, null);
       
-      // Create tracks
+      if (!isMountedRef.current) return;
+
+      // Create and publish tracks
       const audioTrack = await AgoraRTC.createMicrophoneAudioTrack();
       const videoTrack = await AgoraRTC.createCameraVideoTrack();
       
-      localAudioTrackRef.current = audioTrack;
-      localVideoTrackRef.current = videoTrack;
-      
+      if (!isMountedRef.current) {
+        audioTrack.close();
+        videoTrack.close();
+        return;
+      }
+
       // Play local video
       if (localVideoRef.current) {
         videoTrack.play(localVideoRef.current);
@@ -82,51 +110,57 @@ export default function SimpleVideoCall({ patientInfo, autoStart = false, onCall
       // Publish tracks
       await clientRef.current.publish([audioTrack, videoTrack]);
       
+      if (!isMountedRef.current) {
+        await clientRef.current.leave();
+        audioTrack.close();
+        videoTrack.close();
+        return;
+      }
+
       setIsJoined(true);
       setIsLoading(false);
       
     } catch (error) {
       console.error('Failed to join call:', error);
-      setError(error.message || 'Failed to join video call');
-      setIsLoading(false);
-      setHasJoinedOnce(false);
+      if (isMountedRef.current) {
+        setError(error.message || 'Failed to join video call');
+        setIsLoading(false);
+        hasJoinedRef.current = false;
+      }
     }
   };
 
   const leaveCall = async () => {
-    if (clientRef.current && isJoined) {
-      await clientRef.current.leave();
-      
-      if (localAudioTrackRef.current) {
-        localAudioTrackRef.current.close();
-      }
-      if (localVideoTrackRef.current) {
-        localVideoTrackRef.current.close();
-      }
-      
+    if (!isMountedRef.current) return;
+    
+    setIsLoading(true);
+    try {
+      await cleanup();
       setIsJoined(false);
-      setHasJoinedOnce(false);
-      
+      hasJoinedRef.current = false;
       if (onCallEnd) onCallEnd();
+    } catch (error) {
+      console.error('Leave call error:', error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  // Auto-start if enabled
+  // Handle auto-start
   useEffect(() => {
-    if (autoStart && !isJoined && !isLoading && !hasJoinedOnce) {
+    if (autoStart && !hasJoinedRef.current && !isLoading && !isJoined && !error) {
       joinCall();
     }
-  }, [autoStart, isJoined, isLoading, hasJoinedOnce]);
+  }, [autoStart]); // Only depend on autoStart
 
   return (
     <div style={styles.container}>
       <div style={styles.header}>
         <h3 style={styles.title}>Video Consultation</h3>
-        {!isJoined && !isLoading && (
+        {!isJoined && !isLoading && !error && (
           <button 
             onClick={joinCall}
             style={styles.startButton}
-            disabled={hasJoinedOnce}
           >
             Start Video Call
           </button>
@@ -135,8 +169,9 @@ export default function SimpleVideoCall({ patientInfo, autoStart = false, onCall
           <button 
             onClick={leaveCall}
             style={styles.endButton}
+            disabled={isLoading}
           >
-            End Call
+            {isLoading ? 'Ending...' : 'End Call'}
           </button>
         )}
       </div>
@@ -144,11 +179,19 @@ export default function SimpleVideoCall({ patientInfo, autoStart = false, onCall
       {error && (
         <div style={styles.error}>
           <p>❌ {error}</p>
-          <button onClick={() => setError(null)} style={styles.dismissButton}>Dismiss</button>
+          <button 
+            onClick={() => {
+              setError(null);
+              hasJoinedRef.current = false;
+            }} 
+            style={styles.dismissButton}
+          >
+            Try Again
+          </button>
         </div>
       )}
 
-      {isLoading && (
+      {isLoading && !isJoined && (
         <div style={styles.loading}>
           <div style={styles.spinner}></div>
           <p>Setting up your camera and microphone...</p>
@@ -206,6 +249,7 @@ const styles = {
     borderRadius: '6px',
     cursor: 'pointer',
     fontWeight: '600',
+    opacity: 1,
   },
   error: {
     background: '#f8d7da',
