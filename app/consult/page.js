@@ -229,12 +229,22 @@ const styles = {
   },
 };
 
-// Add global style for spinner animation
-if (typeof document !== 'undefined') {
-  const style = document.createElement('style');
-  style.innerHTML = `@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }`;
-  document.head.appendChild(style);
-}
+{isLoading && !isJoined && (
+  <div style={styles.loading}>
+    <div style={{
+      ...styles.spinner,
+      animation: 'spin 1s linear infinite'
+    }}></div>
+    <p>Setting up camera and microphone...</p>
+    <style>{`
+      @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+      }
+    `}</style>
+  </div>
+)}
+
 
 // ===== TRANSLATIONS DICTIONARY =====
 const translations = {
