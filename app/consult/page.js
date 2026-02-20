@@ -7,8 +7,10 @@ import dynamicImport from 'next/dynamic';
 export const dynamic = 'force-dynamic';
 import Image from 'next/image';
 
-import VideoCallComponent from '../components/VideoCallComponent';
-const AgoraVideoCall = VideoCallComponent;
+const AgoraVideoCall = dynamicImport(() => import('../components/VideoCallComponent'), {
+  ssr: false,
+  loading: () => <div>Loading video call...</div>
+});
 
 const [videoCallInitialized, setVideoCallInitialized] = useState(false);
 
