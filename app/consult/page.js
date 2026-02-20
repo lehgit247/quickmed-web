@@ -12,6 +12,7 @@ const AgoraVideoCall = dynamicImport(() => import('../components/VideoCallCompon
   loading: () => <div>Loading video call...</div>
 });
 
+
 const [videoCallInitialized, setVideoCallInitialized] = useState(false);
 
 // Translations dictionary
