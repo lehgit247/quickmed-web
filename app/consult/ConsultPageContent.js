@@ -1,22 +1,3 @@
-'use client';
-import { useState, useEffect, useCallback, useRef } from 'react';
-import { useRouter } from 'next/navigation';
-import Link from 'next/link';
-import Image from 'next/image';
-import { useLanguage } from '../context/LanguageContext';
-import dynamic from 'next/dynamic';
-export const dynamic = 'force-dynamic';
-
-// Dynamically import the actual page content with ssr: false
-const ConsultPageContent = dynamic(
-  () => import('./ConsultPageContent'),
-  { ssr: false, loading: () => <div>Loading consultation page...</div> }
-);
-
-export default function ConsultPage() {
-  return <ConsultPageContent />;
-}
-
 // ===== VIDEO CALL COMPONENT (INLINED) =====
 function VideoCallComponent({ patientInfo, autoStart = false, onCallEnd }) {
   const [isJoined, setIsJoined] = useState(false);
