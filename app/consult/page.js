@@ -5,7 +5,9 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useLanguage } from '../context/LanguageContext';
 import dynamic from 'next/dynamic';
-export const dynamic = 'force-dynamic';
+
+// Use a different name for the export to avoid conflict
+export const dynamicConfig = 'force-dynamic';
 
 // Dynamically import the video call component (SSR disabled)
 const VideoCallComponent = dynamic(
@@ -15,6 +17,7 @@ const VideoCallComponent = dynamic(
     loading: () => <div style={{padding: '20px', textAlign: 'center'}}>Loading video call...</div>
   }
 );
+
 
 // ===== TRANSLATIONS DICTIONARY =====
 const translations = {
@@ -758,31 +761,31 @@ export default function ConsultPage() {
 
           <div className="row">
             {match.consultationType === 'video' ? (
-              <div style={{width: '100%', marginBottom: '16px'}}>
-                {/* Show payment status */}
-                {paymentVerified ? (
-                  <div style={{background: '#d4edda', padding: '10px', borderRadius: '5px', marginBottom: '10px'}}>
-                    ✅ Payment Verified - Video Call Ready
-                  </div>
-                ) : (
-                  <div style={{background: '#fff3cd', padding: '10px', borderRadius: '5px', marginBottom: '10px'}}>
-                    ⏳ Payment Required - Complete payment to start video call
-                  </div>
-                )}
-                
-                <VideoCallComponent 
-                  patientInfo={{
-                    name: form.name || 'Patient',
-                    symptoms: form.symptoms
-                  }}
-                  autoStart={paymentVerified}
-                  onCallEnd={() => {
-                    console.log('Video consultation completed');
-                    alert('Video consultation ended successfully!');
-                  }}
-                />
-              </div>
-            ) : (
+  <div style={{width: '100%', marginBottom: '16px'}}>
+    {/* Show payment status */}
+    {paymentVerified ? (
+      <div style={{background: '#d4edda', padding: '10px', borderRadius: '5px', marginBottom: '10px'}}>
+        ✅ Payment Verified - Video Call Ready
+      </div>
+    ) : (
+      <div style={{background: '#fff3cd', padding: '10px', borderRadius: '5px', marginBottom: '10px', color: '#000000'}}>
+        ⏳ Payment Required - Complete payment to start video call
+      </div>
+    )}
+    
+    <VideoCallComponent 
+      patientInfo={{
+        name: form.name || 'Patient',
+        symptoms: form.symptoms
+      }}
+      autoStart={paymentVerified}
+      onCallEnd={() => {
+        console.log('Video consultation completed');
+        alert('Video consultation ended successfully!');
+      }}
+    />
+  </div>
+) : (
               <button
                 className="btn btn-primary"
                 onClick={() => alert(`Starting ${match.consultationType} consultation (demo)`)}
