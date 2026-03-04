@@ -11,7 +11,7 @@ export const dynamicConfig = 'force-dynamic';
 
 // Dynamically import the video call component (SSR disabled)
 const VideoCallComponent = dynamic(
-  () => import('../components/VideoCallComponent'),
+  () => import('../components/VideoCallComponent'),  // Make sure it's EXACTLY this path
   { 
     ssr: false,
     loading: () => <div style={{padding: '20px', textAlign: 'center'}}>Loading video call...</div>
