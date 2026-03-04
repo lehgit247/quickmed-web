@@ -6,12 +6,12 @@ import Image from 'next/image';
 import { useLanguage } from '../context/LanguageContext';
 import dynamic from 'next/dynamic';
 
-// Use a different name for the export to avoid conflict
+
 export const dynamicConfig = 'force-dynamic';
 
-// Dynamically import the video call component (SSR disabled)
+
 const VideoCallComponent = dynamic(
-  () => import('../components/VideoCallComponent'),  // Make sure it's EXACTLY this path
+  () => import('../components/videocall'),  // SIMPLE lowercase name
   { 
     ssr: false,
     loading: () => <div style={{padding: '20px', textAlign: 'center'}}>Loading video call...</div>
