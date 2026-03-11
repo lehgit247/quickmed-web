@@ -2,10 +2,10 @@
 import { useState, useEffect, useCallback } from 'react';
 import dynamic from 'next/dynamic';
 
-const DoctorVideoCall = dynamic(() => import('../../components/DoctorVideoCall'), {
-  ssr: false,
-  loading: () => <p>Loading doctor video call...</p>
-});
+//const DoctorVideoCall = dynamic(() => import('../../components/DoctorVideoCall'), {
+  //ssr: false,
+ // loading: () => <p>Loading doctor video call...</p>
+//});
 
 export default function DoctorDashboard() {
   const [doctor, setDoctor] = useState(null);

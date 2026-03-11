@@ -11,7 +11,7 @@ export const dynamicConfig = 'force-dynamic';
 
 
 const VideoCallComponent = dynamic(
-  () => import('../components/videocall'),  // SIMPLE lowercase name
+  () => import('../../components/videocall'),
   { 
     ssr: false,
     loading: () => <div style={{padding: '20px', textAlign: 'center'}}>Loading video call...</div>
