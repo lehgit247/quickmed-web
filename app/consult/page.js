@@ -9,12 +9,28 @@ import dynamic from 'next/dynamic';
 
 export const dynamicConfig = 'force-dynamic';
 
-
+// Dynamically import all consultation components (SSR disabled)
 const VideoCallComponent = dynamic(
   () => import('../../components/videocall'),
   { 
     ssr: false,
     loading: () => <div style={{padding: '20px', textAlign: 'center'}}>Loading video call...</div>
+  }
+);
+
+const ChatComponent = dynamic(
+  () => import('../../components/ChatComponent'),
+  { 
+    ssr: false,
+    loading: () => <div style={{padding: '20px', textAlign: 'center'}}>Loading chat...</div>
+  }
+);
+
+const AudioCallComponent = dynamic(
+  () => import('../../components/AudioCallComponent'),
+  { 
+    ssr: false,
+    loading: () => <div style={{padding: '20px', textAlign: 'center'}}>Loading audio call...</div>
   }
 );
 
@@ -741,7 +757,7 @@ export default function ConsultPage() {
 
           {match.travelMode && (
             <div className="travel-features">
-              <h4>🌍 {t.travelerBenefits}</h4>
+             <h4 style={{color: '#000000'}}>🌍 {t.travelerBenefits}</h4>
               <div className="travel-feature">✅ {t.multiLanguage}</div>
               <div className="travel-feature">✅ {t.insuranceSupport}</div>
               <div className="travel-feature">✅ {t.travelEmergency}</div>
@@ -759,57 +775,90 @@ export default function ConsultPage() {
             <div className="text">{match.advice}</div>
           </div>
 
-          <div className="row">
-            {match.consultationType === 'video' ? (
-  <div style={{width: '100%', marginBottom: '16px'}}>
-    {/* Show payment status */}
-    {paymentVerified ? (
-      <div style={{background: '#d4edda', padding: '10px', borderRadius: '5px', marginBottom: '10px'}}>
-        ✅ Payment Verified - Video Call Ready
-      </div>
-    ) : (
-      <div style={{background: '#fff3cd', padding: '10px', borderRadius: '5px', marginBottom: '10px', color: '#000000'}}>
-        ⏳ Payment Required - Complete payment to start video call
-      </div>
-    )}
-    
-    <VideoCallComponent 
-      patientInfo={{
-        name: form.name || 'Patient',
-        symptoms: form.symptoms
-      }}
-      autoStart={paymentVerified}
-      onCallEnd={() => {
-        console.log('Video consultation completed');
-        alert('Video consultation ended successfully!');
-      }}
-    />
-  </div>
-) : (
-              <button
-                className="btn btn-primary"
-                onClick={() => alert(`Starting ${match.consultationType} consultation (demo)`)}
-              >
-                {match.consultationType === 'chat' && t.startChat}
-                {match.consultationType === 'call' && t.callDoctor}
-                {match.consultationType === 'video' && t.startVideo}
-              </button>
-            )}
-            
-            <Link 
-              href={`/payment?type=${form.consultationType}&doctor=${match.name}&amount=${consultationTypes[form.consultationType]?.price}&name=${form.name}&email=${form.phone}&symptoms=${encodeURIComponent(form.symptoms)}&city=${form.city}`}
-              className="btn btn-primary"
-            >
-              💳 Proceed to Payment
-            </Link>
+<div className="row" style={{flexDirection: 'column', gap: '16px'}}>
+  {/* Chat Consultation */}
+  {match.consultationType === 'chat' && (
+    <div style={{width: '100%'}}>
+      <ChatComponent 
+        patientInfo={{
+          name: form.name || 'Patient',
+          symptoms: form.symptoms
+        }}
+        doctorInfo={{
+          name: match.name
+        }}
+        onEndChat={() => {
+          console.log('Chat ended');
+          alert('Chat session ended');
+        }}
+      />
+    </div>
+  )}
 
-            <button
-              className="btn btn-secondary"
-              onClick={handleGeneratePrescription}
-            >
-              📋 {t.getEprescription}
-            </button>
-          </div>
+  {/* Audio Call Consultation */}
+  {match.consultationType === 'call' && (
+    <div style={{width: '100%'}}>
+      <AudioCallComponent 
+        patientInfo={{
+          name: form.name || 'Patient',
+          symptoms: form.symptoms
+        }}
+        doctorInfo={{
+          name: match.name
+        }}
+        onEndCall={() => {
+          console.log('Audio call ended');
+          alert('Audio consultation ended');
+        }}
+      />
+    </div>
+  )}
+
+  {/* Video Call Consultation */}
+  {match.consultationType === 'video' && (
+    <div style={{width: '100%'}}>
+      {/* Show payment status */}
+      {paymentVerified ? (
+        <div style={{background: '#d4edda', padding: '10px', borderRadius: '5px', marginBottom: '10px'}}>
+          ✅ Payment Verified - Video Call Ready
+        </div>
+      ) : (
+        <div style={{background: '#fff3cd', padding: '10px', borderRadius: '5px', marginBottom: '10px', color: '#000000'}}>
+          ⏳ Payment Required - Complete payment to start video call
+        </div>
+      )}
+      
+      <VideoCallComponent 
+        patientInfo={{
+          name: form.name || 'Patient',
+          symptoms: form.symptoms
+        }}
+        autoStart={paymentVerified}
+        onCallEnd={() => {
+          console.log('Video consultation completed');
+          alert('Video consultation ended successfully!');
+        }}
+      />
+    </div>
+  )}
+
+  {/* Action Buttons - Payment and Prescription */}
+  <div style={{display: 'flex', gap: '10px', marginTop: '10px'}}>
+    <Link 
+      href={`/payment?type=${form.consultationType}&doctor=${match.name}&amount=${consultationTypes[form.consultationType]?.price}&name=${form.name}&email=${form.phone}&symptoms=${encodeURIComponent(form.symptoms)}&city=${form.city}`}
+      className="btn btn-primary"
+    >
+      💳 Proceed to Payment
+    </Link>
+
+    <button
+      className="btn btn-secondary"
+      onClick={handleGeneratePrescription}
+    >
+      📋 {t.getEprescription}
+    </button>
+  </div>
+</div>
 
           <div className="row">
             <button
