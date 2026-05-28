@@ -1,29 +1,33 @@
 "use client";
+
 import { useState } from "react";
 import Link from "next/link";
+import { useLanguage } from "../context/LanguageContext";
+import { getTranslations } from "../i18n";
 
 export default function ContactPage() {
+  const { language } = useLanguage();
+  const t = getTranslations(language);
   const [form, setForm] = useState({ name: "", email: "", message: "" });
   const [sent, setSent] = useState(false);
 
-  function onChange(e) {
-    setForm({ ...form, [e.target.name]: e.target.value });
+  function onChange(event) {
+    setForm({ ...form, [event.target.name]: event.target.value });
   }
 
-  function handleSubmit(e) {
-    e.preventDefault();
-    // Demo: pretend we sent it. Later we can wire an API/email.
+  function handleSubmit(event) {
+    event.preventDefault();
     setSent(true);
   }
 
   return (
     <section className="container contact-page">
-      <h1 className="contact-title">Contact Us</h1>
+      <h1 className="contact-title">{t.contactUs}</h1>
 
       {!sent ? (
         <form onSubmit={handleSubmit} className="card contact-form">
           <label>
-            Full name
+            {t.fullName}
             <input
               name="name"
               value={form.name}
@@ -34,7 +38,7 @@ export default function ContactPage() {
           </label>
 
           <label>
-            Email
+            {t.email}
             <input
               name="email"
               type="email"
@@ -46,7 +50,7 @@ export default function ContactPage() {
           </label>
 
           <label>
-            Your message
+            {t.yourMessage}
             <textarea
               name="message"
               rows={6}
@@ -58,16 +62,14 @@ export default function ContactPage() {
           </label>
 
           <div className="row">
-            <button type="submit" className="btn btn-primary">Send Message</button>
+            <button type="submit" className="btn btn-primary">{t.sendMessage}</button>
           </div>
         </form>
       ) : (
         <div className="card">
-          <div className="success-note">
-            ✅ Thank you! Your message has been received. We’ll get back to you shortly.
-          </div>
+          <div className="success-note">{t.thanksMessage}</div>
           <div className="row" style={{ marginTop: 12 }}>
-            <Link className="btn btn-ghost" href="/">Back Home</Link>
+            <Link className="btn btn-ghost" href="/">{t.backHome}</Link>
           </div>
         </div>
       )}

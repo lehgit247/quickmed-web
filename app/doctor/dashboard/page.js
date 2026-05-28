@@ -2,10 +2,10 @@
 import { useState, useEffect, useCallback } from 'react';
 import dynamic from 'next/dynamic';
 
-//const DoctorVideoCall = dynamic(() => import('../../components/DoctorVideoCall'), {
-  //ssr: false,
- // loading: () => <p>Loading doctor video call...</p>
-//});
+const DoctorVideoCall = dynamic(() => import('../../../components/DoctorVideoCall'), {
+  ssr: false,
+  loading: () => <p>Loading doctor video call...</p>
+});
 
 export default function DoctorDashboard() {
   const [doctor, setDoctor] = useState(null);
@@ -88,7 +88,6 @@ export default function DoctorDashboard() {
     setIncomingCall(null);
     setIsAvailable(true);
     
-    // Remove the declined consultation
     if (incomingCall) {
       fetch('/api/consultation/match', {
         method: 'POST',
@@ -101,6 +100,16 @@ export default function DoctorDashboard() {
     }
   };
 
+  const getCallTypeLabel = (consultation = incomingCall) => {
+    if (consultation?.consultationType === 'call') return 'Audio Consultation';
+    return 'Video Consultation';
+  };
+
+  const getCallActionLabel = (consultation = incomingCall) => {
+    if (consultation?.consultationType === 'call') return 'Accept Audio Call';
+    return 'Accept Video Call';
+  };
+
   const startTestCall = useCallback(() => {
     // Use same channel pattern as patient side
     const testChannel = `consult_${Date.now().toString().slice(-6)}`;
@@ -109,6 +118,7 @@ export default function DoctorDashboard() {
       id: 'test-consultation',
       patientName: 'Test Patient',
       symptoms: 'Test consultation',
+      consultationType: 'video',
       channelName: testChannel
     });
     setChannelName(testChannel); // Update the channel name
@@ -133,11 +143,12 @@ export default function DoctorDashboard() {
 
   // Format symptoms - show default message if no specific symptoms
   const getSymptoms = () => {
-    if (!incomingCall) return 'Requesting video consultation';
+    if (!incomingCall) return 'Requesting consultation';
     
     if (incomingCall.symptoms && 
         incomingCall.symptoms !== 'Video consultation requested' && 
-        incomingCall.symptoms !== 'Video consultation') {
+        incomingCall.symptoms !== 'Video consultation' &&
+        incomingCall.symptoms !== 'Audio consultation requested') {
       return incomingCall.symptoms;
     }
     
@@ -155,7 +166,7 @@ export default function DoctorDashboard() {
         borderRadius: '10px',
         marginBottom: '20px'
       }}>
-        <h1>👨‍⚕️ Doctor Video Dashboard</h1>
+        <h1>Doctor Call Dashboard</h1>
         <p>{doctor.name} - {doctor.specialty}</p>
         <div style={{ 
           padding: '8px 16px', 
@@ -171,20 +182,35 @@ export default function DoctorDashboard() {
       {/* Incoming Call Notification */}
       {!isCallActive && incomingCall && (
         <div style={{ 
-          background: '#e3f2fd', 
-          padding: '25px', 
+          position: 'fixed',
+          top: '24px',
+          right: '24px',
+          zIndex: 1000,
+          width: 'min(420px, calc(100vw - 32px))',
+          background: '#ffffff',
+          padding: '22px',
           borderRadius: '10px',
-          marginBottom: '20px',
-          color: 'black',
-          border: '3px solid #2196f3',
+          color: '#111827',
+          border: '2px solid #2196f3',
+          boxShadow: '0 20px 45px rgba(15, 23, 42, 0.22)',
           animation: 'pulse 2s infinite'
         }}>
-          <h3 style={{ color: '#2196f3', marginBottom: '15px' }}>📞 INCOMING VIDEO CALL!</h3>
+          <div style={{display: 'flex', justifyContent: 'space-between', gap: '12px', alignItems: 'flex-start', marginBottom: '14px'}}>
+            <div>
+              <div style={{fontSize: '12px', textTransform: 'uppercase', letterSpacing: '0.08em', color: '#2563eb', fontWeight: 800}}>
+                Incoming Call Request
+              </div>
+              <h3 style={{ color: '#0f172a', margin: '6px 0 0' }}>{getCallTypeLabel()}</h3>
+            </div>
+            <div style={{background: '#dbeafe', color: '#1d4ed8', padding: '6px 10px', borderRadius: '999px', fontSize: '12px', fontWeight: 800}}>
+              {getWaitingTime()}s
+            </div>
+          </div>
           <div style={{ marginBottom: '15px' }}>
             <p><strong>Patient:</strong> {getPatientName()}</p>
-            <p><strong>Symptoms:</strong> {getSymptoms()}</p>
-            <p><strong>Request Type:</strong> Video Consultation</p>
-            <p><strong>Waiting Time:</strong> {getWaitingTime()} seconds</p>
+            <p><strong>Presenting Symptoms:</strong> {getSymptoms()}</p>
+            <p><strong>Request Type:</strong> {getCallTypeLabel()}</p>
+            <p style={{fontSize: '13px', color: '#475569'}}>Accept the request to join the same secure consultation room as the patient.</p>
           </div>
           
           <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
@@ -201,7 +227,7 @@ export default function DoctorDashboard() {
                 fontWeight: 'bold'
               }}
             >
-              🎥 JOIN CALL NOW
+              {getCallActionLabel()}
             </button>
             
             <button 
@@ -216,7 +242,7 @@ export default function DoctorDashboard() {
                 cursor: 'pointer'
               }}
             >
-              ❌ DECLINE
+              Decline
             </button>
           </div>
         </div>
@@ -232,14 +258,14 @@ export default function DoctorDashboard() {
         }}>
           {!incomingCall ? (
             <>
-              <h3>🕐 Waiting for Patient Calls</h3>
-              <p>You will automatically receive video call requests from patients</p>
+              <h3>Waiting for Patient Calls</h3>
+              <p>You will automatically receive audio and video call requests from patients.</p>
               
               <div style={{ marginTop: '20px', color: '#666', textAlign: 'left', display: 'inline-block' }}>
-                <p>✅ Patients can request video consultations</p>
-                <p>✅ You will be notified automatically</p>
-                <p>✅ Click &quot;Join Video Call&quot; to connect</p>
-                <p>✅ Calls are checked every 3 seconds</p>
+                <p>Patients can request video consultations</p>
+                <p>Patients can request audio consultations</p>
+                <p>You will see the patient&apos;s presenting symptoms before accepting</p>
+                <p>Calls are checked every 3 seconds</p>
               </div>
 
               {/* Test Call Section */}
@@ -288,7 +314,7 @@ export default function DoctorDashboard() {
             </>
           ) : (
             <div style={{ padding: '20px' }}>
-              <h3>📞 Checking for calls...</h3>
+              <h3>Checking for calls...</h3>
               <p>Monitoring for incoming patient requests</p>
               <div style={{ marginTop: '20px' }}>
                 <div style={{ 
@@ -308,6 +334,7 @@ export default function DoctorDashboard() {
         <DoctorVideoCall 
           onCallEnd={endConsultation} 
           channelName={channelName}
+          consultation={currentConsultation}
         />
       )}
 

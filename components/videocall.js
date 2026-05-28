@@ -1,288 +1,418 @@
 'use client';
-import { useEffect, useRef, useState } from 'react';
+
+import { useCallback, useEffect, useRef, useState } from 'react';
 import AgoraRTC from 'agora-rtc-sdk-ng';
 
-export default function VideoCall({ patientInfo, autoStart = false, onCallEnd }) {
-  const [isJoined, setIsJoined] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
+function createUid() {
+  return Math.floor(Math.random() * 1000000) + 1;
+}
+
+function safeChannelName(value) {
+  return String(value || '')
+    .trim()
+    .replace(/[^a-zA-Z0-9_!#$%&()+\-:;<=.>?@[\]^{}|~, ]/g, '_')
+    .slice(0, 60);
+}
+
+export default function VideoCall({
+  consultationId,
+  channelName,
+  patientInfo,
+  autoStart = false,
+  onCallEnd,
+  registerPatient = true
+}) {
+  const [callState, setCallState] = useState('idle');
   const [error, setError] = useState(null);
-  
+  const [activeChannel, setActiveChannel] = useState(
+    safeChannelName(channelName || consultationId)
+  );
+  const [isMuted, setIsMuted] = useState(false);
+  const [isCameraOff, setIsCameraOff] = useState(false);
+  const [remoteUsers, setRemoteUsers] = useState(0);
+
   const clientRef = useRef(null);
   const localVideoRef = useRef(null);
   const remoteVideoRef = useRef(null);
+  const consultationIdRef = useRef(consultationId || null);
   const localAudioTrackRef = useRef(null);
   const localVideoTrackRef = useRef(null);
-  const channelName = useRef(`consult_${Math.floor(Math.random() * 1000000)}`);
+  const hasAutoStartedRef = useRef(false);
 
-  // Initialize Agora client
-  useEffect(() => {
-    // Cleanup function
-    return () => {
-      if (localAudioTrackRef.current) {
-        localAudioTrackRef.current.close();
-      }
-      if (localVideoTrackRef.current) {
-        localVideoTrackRef.current.close();
-      }
-      if (clientRef.current && isJoined) {
-        clientRef.current.leave();
-      }
-    };
-  }, [isJoined]);
+  const cleanup = useCallback(async () => {
+    try {
+      localAudioTrackRef.current?.stop();
+      localAudioTrackRef.current?.close();
+      localAudioTrackRef.current = null;
 
-  const joinCall = async () => {
-    if (isLoading || isJoined) return;
-    
-    setIsLoading(true);
+      localVideoTrackRef.current?.stop();
+      localVideoTrackRef.current?.close();
+      localVideoTrackRef.current = null;
+
+      if (clientRef.current) {
+        clientRef.current.removeAllListeners();
+        await clientRef.current.leave();
+        clientRef.current = null;
+      }
+
+      setRemoteUsers(0);
+    } catch (err) {
+      console.error('Error cleaning up video call:', err);
+    }
+  }, []);
+
+  const checkPermissions = async () => {
+    if (!navigator.mediaDevices?.getUserMedia) {
+      throw new Error('Camera and microphone access is not available in this browser.');
+    }
+
+    const stream = await navigator.mediaDevices.getUserMedia({
+      video: true,
+      audio: true
+    });
+
+    stream.getTracks().forEach((track) => track.stop());
+  };
+
+  const registerConsultation = useCallback(async () => {
+    if (!registerPatient || activeChannel) {
+      return {
+        consultationId: consultationIdRef.current,
+        channelName: activeChannel || safeChannelName(channelName || consultationId)
+      };
+    }
+
+    const response = await fetch('/api/consultation/match', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        type: 'patient_request',
+        consultationType: 'video',
+        patientInfo: {
+          name: patientInfo?.name || 'Patient',
+          symptoms: patientInfo?.symptoms || 'Video consultation requested'
+        }
+      })
+    });
+
+    const result = await response.json();
+
+    if (!result.success) {
+      throw new Error(result.error || 'Could not create a consultation room.');
+    }
+
+    consultationIdRef.current = result.consultationId;
+    setActiveChannel(result.channelName);
+
+    return result;
+  }, [activeChannel, channelName, consultationId, patientInfo, registerPatient]);
+
+  const getAgoraCredentials = async (roomName, uid) => {
+    const response = await fetch('/api/agora/generate-token', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        channelName: roomName,
+        uid,
+        role: 'publisher'
+      })
+    });
+
+    const result = await response.json();
+
+    if (!response.ok) {
+      throw new Error(result.error || 'Could not prepare the video service.');
+    }
+
+    return result;
+  };
+
+  const joinCall = useCallback(async () => {
+    if (callState === 'connecting' || callState === 'connected' || callState === 'waiting_for_doctor') {
+      return;
+    }
+
+    setCallState('requesting_permissions');
     setError(null);
 
     try {
-      const appId = process.env.NEXT_PUBLIC_AGORA_APP_ID;
-      
-      if (!appId || appId === 'your_actual_agora_app_id_here') {
-        throw new Error('Agora App ID not configured. Please add it to .env.local');
+      await checkPermissions();
+      setCallState('connecting');
+
+      const room = await registerConsultation();
+      const roomName = safeChannelName(room.channelName || activeChannel || consultationId);
+
+      if (!roomName) {
+        throw new Error('Missing consultation room name.');
       }
 
-      console.log('🔑 Using App ID:', appId);
-      console.log('📺 Channel:', channelName.current);
+      const uid = createUid();
+      const { appId, token } = await getAgoraCredentials(roomName, uid);
 
-      // Create Agora client
-      clientRef.current = AgoraRTC.createClient({ mode: 'rtc', codec: 'vp8' });
-      
-      // Handle remote users
-      clientRef.current.on('user-published', async (user, mediaType) => {
-        console.log(`👤 Remote user published: ${user.uid}, media: ${mediaType}`);
-        await clientRef.current.subscribe(user, mediaType);
-        
-        if (mediaType === 'video') {
+      if (!appId) {
+        throw new Error('Agora App ID is not configured.');
+      }
+
+      const client = AgoraRTC.createClient({
+        mode: 'rtc',
+        codec: 'vp8'
+      });
+
+      clientRef.current = client;
+
+      client.on('connection-state-change', (curState) => {
+        if (curState === 'RECONNECTING') setCallState('reconnecting');
+        if (curState === 'CONNECTED') setCallState('connected');
+        if (curState === 'DISCONNECTED') setCallState('ended');
+      });
+
+      client.on('user-published', async (user, mediaType) => {
+        await client.subscribe(user, mediaType);
+        setRemoteUsers(client.remoteUsers.length);
+
+        if (mediaType === 'video' && user.videoTrack && remoteVideoRef.current) {
           user.videoTrack.play(remoteVideoRef.current);
         }
-        if (mediaType === 'audio') {
-          user.audioTrack?.play();
+
+        if (mediaType === 'audio' && user.audioTrack) {
+          user.audioTrack.play();
         }
       });
 
-      clientRef.current.on('user-unpublished', (user, mediaType) => {
-        console.log(`👤 Remote user unpublished: ${user.uid}, media: ${mediaType}`);
+      client.on('user-unpublished', () => {
+        setRemoteUsers(client.remoteUsers.length);
       });
 
-      clientRef.current.on('user-joined', (user) => {
-        console.log(`👤 Remote user joined: ${user.uid}`);
+      client.on('user-left', () => {
+        setRemoteUsers(client.remoteUsers.length);
       });
 
-      clientRef.current.on('user-left', (user) => {
-        console.log(`👤 Remote user left: ${user.uid}`);
-      });
+      await client.join(appId, roomName, token || null, uid);
 
-      // Join channel (using null for token in testing, use real token in production)
-      await clientRef.current.join(appId, channelName.current, null, null);
-      console.log('✅ Joined channel successfully');
-      
-      // Create local tracks
-      const audioTrack = await AgoraRTC.createMicrophoneAudioTrack();
-      const videoTrack = await AgoraRTC.createCameraVideoTrack();
-      
+      const [audioTrack, videoTrack] = await AgoraRTC.createMicrophoneAndCameraTracks();
+
       localAudioTrackRef.current = audioTrack;
       localVideoTrackRef.current = videoTrack;
-      
-      // Play local video
+
       if (localVideoRef.current) {
         videoTrack.play(localVideoRef.current);
       }
-      
-      // Publish tracks
-      await clientRef.current.publish([audioTrack, videoTrack]);
-      console.log('📡 Published local tracks');
-      
-      setIsJoined(true);
-      
-    } catch (error) {
-      console.error('❌ Failed to join call:', error);
-      setError(error.message || 'Failed to join video call');
-    } finally {
-      setIsLoading(false);
+
+      await client.publish([audioTrack, videoTrack]);
+
+      setActiveChannel(roomName);
+      setCallState(client.remoteUsers.length ? 'connected' : 'waiting_for_doctor');
+      setRemoteUsers(client.remoteUsers.length);
+    } catch (err) {
+      console.error('Failed to join video call:', err);
+      await cleanup();
+      setError(err.message || 'Failed to join video call.');
+      setCallState('failed');
     }
-  };
+  }, [activeChannel, callState, cleanup, consultationId, registerConsultation]);
 
   const leaveCall = async () => {
-    try {
-      if (clientRef.current && isJoined) {
-        await clientRef.current.leave();
-        console.log('👋 Left channel');
-      }
-      
-      if (localAudioTrackRef.current) {
-        localAudioTrackRef.current.close();
-      }
-      if (localVideoTrackRef.current) {
-        localVideoTrackRef.current.close();
-      }
-      
-      setIsJoined(false);
-      if (onCallEnd) onCallEnd();
-    } catch (error) {
-      console.error('Error leaving call:', error);
+    await cleanup();
+
+    if (consultationIdRef.current) {
+      fetch('/api/consultation/match', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          type: 'end_consultation',
+          consultationId: consultationIdRef.current
+        })
+      }).catch((err) => console.error('Could not end consultation:', err));
     }
+
+    setCallState('ended');
+    onCallEnd?.();
+  };
+
+  const toggleMute = async () => {
+    if (!localAudioTrackRef.current) return;
+    await localAudioTrackRef.current.setEnabled(isMuted);
+    setIsMuted(!isMuted);
+  };
+
+  const toggleCamera = async () => {
+    if (!localVideoTrackRef.current) return;
+    await localVideoTrackRef.current.setEnabled(isCameraOff);
+    setIsCameraOff(!isCameraOff);
   };
 
   useEffect(() => {
-    if (autoStart && !isJoined && !isLoading) {
+    if (autoStart && !hasAutoStartedRef.current) {
+      hasAutoStartedRef.current = true;
       joinCall();
     }
-  }, [autoStart]);
+  }, [autoStart, joinCall]);
+
+  useEffect(() => {
+    return () => {
+      cleanup();
+    };
+  }, [cleanup]);
+
+  const isInCall = ['connected', 'waiting_for_doctor', 'reconnecting'].includes(callState);
 
   return (
     <div style={styles.container}>
       <div style={styles.header}>
-        <h3 style={styles.title}>Video Consultation</h3>
-        {!isJoined && !isLoading && !error && (
+        <div>
+          <h3 style={styles.title}>QuickMed Video Consultation</h3>
+          <p style={styles.subtitle}>
+            {activeChannel ? `Room: ${activeChannel}` : 'Ready to create a secure room'}
+          </p>
+        </div>
+
+        {callState === 'idle' || callState === 'failed' || callState === 'ended' ? (
           <button onClick={joinCall} style={styles.startButton}>
             Start Video Call
           </button>
-        )}
-        {isJoined && (
+        ) : null}
+
+        {isInCall ? (
           <button onClick={leaveCall} style={styles.endButton}>
             End Call
           </button>
-        )}
+        ) : null}
       </div>
 
-      {error && (
-        <div style={styles.error}>
-          <p>❌ {error}</p>
-          <button onClick={() => setError(null)} style={styles.dismissButton}>
-            Try Again
-          </button>
-        </div>
-      )}
+      {error ? <div style={styles.error}>{error}</div> : null}
 
-      {isLoading && !isJoined && (
-        <div style={styles.loading}>
-          <div style={styles.spinner}></div>
-          <p>Setting up camera and microphone...</p>
-        </div>
-      )}
+      <p style={styles.status}>
+        Status: {callState.replaceAll('_', ' ')}
+        {isInCall ? ` • ${remoteUsers ? 'Doctor connected' : 'Waiting for doctor'}` : ''}
+      </p>
 
       <div style={styles.videoGrid}>
-        {/* Local video */}
-        <div style={styles.videoContainer}>
-          <div ref={localVideoRef} style={styles.videoPlayer}></div>
-          <div style={styles.videoLabel}>You</div>
+        <div style={styles.videoTile}>
+          <div ref={localVideoRef} style={styles.video} />
+          <span style={styles.videoLabel}>You</span>
         </div>
-
-        {/* Remote video */}
-        <div style={styles.videoContainer}>
-          <div ref={remoteVideoRef} style={styles.videoPlayer}></div>
-          <div style={styles.videoLabel}>Doctor</div>
+        <div style={styles.videoTile}>
+          <div ref={remoteVideoRef} style={styles.video} />
+          {!remoteUsers ? <span style={styles.placeholder}>Waiting for doctor...</span> : null}
+          <span style={styles.videoLabel}>Doctor</span>
         </div>
       </div>
 
-      <style jsx>{`
-        @keyframes spin {
-          0% { transform: rotate(0deg); }
-          100% { transform: rotate(360deg); }
-        }
-      `}</style>
+      {isInCall ? (
+        <div style={styles.controls}>
+          <button onClick={toggleMute} style={styles.controlButton}>
+            {isMuted ? 'Unmute' : 'Mute'}
+          </button>
+          <button onClick={toggleCamera} style={styles.controlButton}>
+            {isCameraOff ? 'Camera On' : 'Camera Off'}
+          </button>
+        </div>
+      ) : null}
     </div>
   );
 }
 
 const styles = {
   container: {
-    width: '100%',
-    background: '#f5f5f5',
-    borderRadius: '12px',
     padding: '20px',
+    background: '#f5f5f5',
+    borderRadius: '12px'
   },
   header: {
     display: 'flex',
     justifyContent: 'space-between',
+    gap: '16px',
     alignItems: 'center',
-    marginBottom: '20px',
+    marginBottom: '20px'
   },
   title: {
-    color: '#000000',
     margin: 0,
-    fontSize: '18px',
+    color: '#1f3d24'
+  },
+  subtitle: {
+    margin: '6px 0 0',
+    color: '#666',
+    fontSize: '13px'
   },
   startButton: {
-    padding: '10px 20px',
     background: '#2c5530',
-    color: 'white',
+    color: '#fff',
+    padding: '10px 20px',
     border: 'none',
     borderRadius: '6px',
     cursor: 'pointer',
-    fontWeight: '600',
+    fontWeight: 700
   },
   endButton: {
-    padding: '10px 20px',
     background: '#dc3545',
-    color: 'white',
+    color: '#fff',
+    padding: '10px 20px',
     border: 'none',
     borderRadius: '6px',
     cursor: 'pointer',
-    fontWeight: '600',
+    fontWeight: 700
+  },
+  controlButton: {
+    background: '#2457a6',
+    color: '#fff',
+    padding: '10px 16px',
+    border: 'none',
+    borderRadius: '6px',
+    cursor: 'pointer',
+    fontWeight: 700
   },
   error: {
     background: '#f8d7da',
     border: '1px solid #f5c6cb',
     borderRadius: '6px',
-    padding: '15px',
-    marginBottom: '20px',
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  dismissButton: {
-    background: 'none',
-    border: '1px solid #721c24',
     color: '#721c24',
-    padding: '5px 10px',
-    borderRadius: '4px',
-    cursor: 'pointer',
+    marginBottom: '15px',
+    padding: '12px'
   },
-  loading: {
-    textAlign: 'center',
-    padding: '40px',
-    background: 'white',
-    borderRadius: '8px',
-    marginBottom: '20px',
-  },
-  spinner: {
-    width: '40px',
-    height: '40px',
-    border: '4px solid #f3f3f3',
-    borderTop: '4px solid #2c5530',
-    borderRadius: '50%',
-    animation: 'spin 1s linear infinite',
-    margin: '0 auto 10px',
+  status: {
+    color: '#333',
+    textTransform: 'capitalize'
   },
   videoGrid: {
     display: 'grid',
-    gridTemplateColumns: '1fr 1fr',
-    gap: '20px',
-    minHeight: '300px',
+    gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
+    gap: '20px'
   },
-  videoContainer: {
+  videoTile: {
     position: 'relative',
+    minHeight: '300px',
     background: '#000',
     borderRadius: '8px',
-    overflow: 'hidden',
-    aspectRatio: '16/9',
+    overflow: 'hidden'
   },
-  videoPlayer: {
+  video: {
     width: '100%',
-    height: '100%',
-    background: '#1a1a1a',
+    height: '300px',
+    background: '#000'
   },
   videoLabel: {
     position: 'absolute',
-    bottom: '10px',
-    left: '10px',
-    background: 'rgba(0,0,0,0.6)',
-    color: 'white',
+    left: '12px',
+    bottom: '12px',
+    background: 'rgba(0,0,0,0.65)',
+    color: '#fff',
     padding: '4px 8px',
     borderRadius: '4px',
-    fontSize: '12px',
+    fontSize: '12px'
   },
+  placeholder: {
+    position: 'absolute',
+    inset: 0,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    color: '#fff',
+    fontWeight: 700
+  },
+  controls: {
+    display: 'flex',
+    gap: '10px',
+    justifyContent: 'center',
+    marginTop: '16px'
+  }
 };

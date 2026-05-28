@@ -3,7 +3,14 @@ let pendingConsultations = [];
 
 export async function POST(request) {
   try {
-    const { type, doctorId, patientId, consultationId, action } = await request.json();
+    const {
+      type,
+      patientId,
+      patientInfo,
+      consultationId,
+      consultationType = 'video',
+      channelName
+    } = await request.json();
 
     if (type === 'doctor_available') {
       // Doctor is available and waiting for calls
@@ -17,16 +24,17 @@ export async function POST(request) {
       });
     }
 
-   if (type === 'patient_request') {
-  // Patient requests a consultation
-  const consultation = {
-    id: `consult_${Date.now()}`,
-    patientId: patientId,
-    patientName: patientInfo?.name || 'Unknown Patient',
-    symptoms: patientInfo?.symptoms || 'General consultation',
-    timestamp: Date.now(),
-    channelName: `consultation-${Date.now()}`
-  };
+    if (type === 'patient_request') {
+      const now = Date.now();
+      const consultation = {
+        id: `consult_${now}`,
+        patientId: patientId || null,
+        patientName: patientInfo?.name || 'Unknown Patient',
+        symptoms: patientInfo?.symptoms || 'General consultation',
+        consultationType,
+        timestamp: now,
+        channelName: channelName || `consultation_${now}`
+      };
       
       pendingConsultations.push(consultation);
       

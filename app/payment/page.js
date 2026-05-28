@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useLanguage } from '../context/LanguageContext';
+import { getTranslations } from '../i18n';
 import { paystackService } from '../../lib/paystackService';
 export const dynamic = 'force-dynamic';
 
@@ -103,7 +104,11 @@ const translations = {
 
 export default function PaymentPage() {
   const { language } = useLanguage();
-  const t = translations[language] || translations.en;
+  const t = {
+    ...translations.en,
+    ...getTranslations(language),
+    ...(translations[language] || {})
+  };
   const router = useRouter();
 
   // State for URL parameters
@@ -148,6 +153,7 @@ export default function PaymentPage() {
 
   const consultationTypes = {
     video: { name: t.videoConsultation, price: 5000 },
+    call: { name: t.voiceConsultation, price: 3000 },
     voice: { name: t.voiceConsultation, price: 3000 },
     chat: { name: t.chatConsultation, price: 1500 },
     emergency: { name: t.emergencyConsultation, price: 10000 }
@@ -239,7 +245,7 @@ export default function PaymentPage() {
         await savePaymentRecord(paymentResult);
         
         setTimeout(() => {
-          router.push('/consult');
+          router.push(`/consult?payment=${paymentResult.reference}&verified=true`);
         }, 2000);
       }
     } catch (error) {

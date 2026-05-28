@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useLanguage } from '../context/LanguageContext';
+import { getTranslations } from '../i18n';
 import dynamic from 'next/dynamic';
 
 
@@ -323,7 +324,11 @@ export default function ConsultPage() {
   }, []);
 
   const { language } = useLanguage();
-  const t = translations[language] || translations.en;
+  const t = {
+    ...translations.en,
+    ...getTranslations(language),
+    ...(translations[language] || {})
+  };
   
   const [form, setForm] = useState({
     name: "",
@@ -341,6 +346,17 @@ export default function ConsultPage() {
   const [match, setMatch] = useState(null);
   const [showPrescription, setShowPrescription] = useState(false);
 
+  useEffect(() => {
+    if (!paymentVerified || typeof window === 'undefined') return;
+
+    const saved = JSON.parse(localStorage.getItem('quickmedPendingConsultation') || 'null');
+
+    if (saved?.form && saved?.match) {
+      setForm(saved.form);
+      setMatch(saved.match);
+    }
+  }, [paymentVerified]);
+
   function onChange(e) {
     setForm({ ...form, [e.target.name]: e.target.value });
   }
@@ -357,6 +373,8 @@ export default function ConsultPage() {
       return;
     }
     setError("");
+    setPaymentVerified(false);
+    setPaymentRef("");
 
     const doctors = [
       { 
@@ -451,6 +469,32 @@ export default function ConsultPage() {
       language: form.language || 'english',
       homeCountry: form.homeCountry || 'Nigeria'
     });
+  }
+
+  function getPaymentUrl() {
+    const params = new URLSearchParams({
+      type: form.consultationType,
+      doctor: match.name,
+      amount: String(consultationTypes[form.consultationType]?.price || 0),
+      name: form.name,
+      email: form.phone,
+      symptoms: form.symptoms,
+      city: form.city,
+      from: 'consult'
+    });
+
+    return `/payment?${params.toString()}`;
+  }
+
+  function continueToPayment() {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem(
+        'quickmedPendingConsultation',
+        JSON.stringify({ form, match })
+      );
+    }
+
+    router.push(getPaymentUrl());
   }
 
   function generatePrescription() {
@@ -798,19 +842,35 @@ export default function ConsultPage() {
   {/* Audio Call Consultation */}
   {match.consultationType === 'call' && (
     <div style={{width: '100%'}}>
-      <AudioCallComponent 
-        patientInfo={{
-          name: form.name || 'Patient',
-          symptoms: form.symptoms
-        }}
-        doctorInfo={{
-          name: match.name
-        }}
-        onEndCall={() => {
-          console.log('Audio call ended');
-          alert('Audio consultation ended');
-        }}
-      />
+      {paymentVerified ? (
+        <>
+          <div style={{background: '#d4edda', padding: '10px', borderRadius: '5px', marginBottom: '10px'}}>
+            Payment Verified - Audio Call Ready
+          </div>
+          <AudioCallComponent
+            patientInfo={{
+              name: form.name || 'Patient',
+              symptoms: form.symptoms
+            }}
+            doctorInfo={{
+              name: match.name
+            }}
+            autoStart
+            onEndCall={() => {
+              console.log('Audio call ended');
+              alert('Audio consultation ended');
+            }}
+          />
+        </>
+      ) : (
+        <div style={{background: '#fff3cd', padding: '16px', borderRadius: '8px', color: '#000000'}}>
+          <strong>Payment Required</strong>
+          <p style={{margin: '8px 0 14px'}}>Complete payment to unlock your audio consultation with {match.name}.</p>
+          <button type="button" className="btn btn-primary" onClick={continueToPayment}>
+            Pay and Continue to Call
+          </button>
+        </div>
+      )}
     </div>
   )}
 
@@ -828,6 +888,13 @@ export default function ConsultPage() {
         </div>
       )}
       
+      {!paymentVerified && (
+        <button type="button" className="btn btn-primary" onClick={continueToPayment}>
+          Pay and Continue to Call
+        </button>
+      )}
+
+      {paymentVerified && (
       <VideoCallComponent 
         patientInfo={{
           name: form.name || 'Patient',
@@ -839,6 +906,7 @@ export default function ConsultPage() {
           alert('Video consultation ended successfully!');
         }}
       />
+      )}
     </div>
   )}
 
@@ -847,6 +915,12 @@ export default function ConsultPage() {
     <Link 
       href={`/payment?type=${form.consultationType}&doctor=${match.name}&amount=${consultationTypes[form.consultationType]?.price}&name=${form.name}&email=${form.phone}&symptoms=${encodeURIComponent(form.symptoms)}&city=${form.city}`}
       className="btn btn-primary"
+      onClick={() => {
+        localStorage.setItem(
+          'quickmedPendingConsultation',
+          JSON.stringify({ form, match })
+        );
+      }}
     >
       💳 Proceed to Payment
     </Link>

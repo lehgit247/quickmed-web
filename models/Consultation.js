@@ -61,15 +61,3 @@ consultationSchema.index({ doctor: 1, appointmentDate: 1 });
 consultationSchema.index({ patient: 1, appointmentDate: 1 });
 
 module.exports = mongoose.model('Consultation', consultationSchema);
-
-// In your consultation details page
-{consultation.status === 'confirmed' && (
-  <VideoCall 
-    consultationId={consultation._id}
-    user={currentUser}
-    onCallEnd={() => {
-      // Update consultation status to completed
-      updateConsultationStatus(consultation._id, 'completed');
-    }}
-  />
-)}

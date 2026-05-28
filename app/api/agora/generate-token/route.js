@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { RtcTokenBuilder, RtcRole } from 'agora-token'; // Updated import
+import { RtcTokenBuilder, RtcRole } from 'agora-token';
 
 export async function POST(request) {
   try {
@@ -12,21 +12,29 @@ export async function POST(request) {
       );
     }
 
-    // Use environment variables (set these in Vercel)
-    const appId = process.env.AGORA_APP_ID;
+    const appId = process.env.AGORA_APP_ID || process.env.NEXT_PUBLIC_AGORA_APP_ID;
     const appCertificate = process.env.AGORA_APP_CERTIFICATE;
+    const agoraUid = uid || 0;
 
-    if (!appId || !appCertificate) {
-      console.error('Missing Agora credentials');
+    if (!appId) {
       return NextResponse.json(
-        { error: 'Video service configuration error. Please check server configuration.' },
+        { error: 'Agora App ID is not configured.' },
         { status: 500 }
       );
     }
 
-    // Generate token
-    const tokenRole = role === 'admin' ? RtcRole.PUBLISHER : RtcRole.SUBSCRIBER;
-    const expirationTimeInSeconds = 3600; // 1 hour
+    if (!appCertificate) {
+      return NextResponse.json({
+        token: null,
+        appId,
+        channelName,
+        uid: agoraUid,
+        expiration: null
+      });
+    }
+
+    const tokenRole = role === 'subscriber' ? RtcRole.SUBSCRIBER : RtcRole.PUBLISHER;
+    const expirationTimeInSeconds = 3600;
     const currentTimestamp = Math.floor(Date.now() / 1000);
     const privilegeExpiredTs = currentTimestamp + expirationTimeInSeconds;
 
@@ -34,23 +42,20 @@ export async function POST(request) {
       appId,
       appCertificate,
       channelName,
-      uid || 0,
+      agoraUid,
       tokenRole,
       privilegeExpiredTs
     );
-
-    console.log(`✅ Token generated for channel: ${channelName}, uid: ${uid}`);
 
     return NextResponse.json({
       token,
       appId,
       channelName,
-      uid,
+      uid: agoraUid,
       expiration: privilegeExpiredTs
     });
-
   } catch (error) {
-    console.error('❌ Token generation error:', error);
+    console.error('Token generation error:', error);
     return NextResponse.json(
       { error: 'Failed to generate token: ' + error.message },
       { status: 500 }

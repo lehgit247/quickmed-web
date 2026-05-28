@@ -1,7 +1,7 @@
 "use client";
 import { useState } from "react";
-import Link from "next/link";
 import { useLanguage } from '../context/LanguageContext';
+import { getTranslations } from '../i18n';
 
 // 🎯 Let's add travel words to our language dictionary
 const travelTranslations = {
@@ -30,7 +30,11 @@ const travelTranslations = {
 
 export default function TravelPage() {
   const { language } = useLanguage();
-  const t = { ...travelTranslations[language], ...travelTranslations.en };
+  const t = {
+    ...travelTranslations.en,
+    ...getTranslations(language),
+    ...(travelTranslations[language] || {})
+  };
   
   const [activeTab, setActiveTab] = useState("flights");
 

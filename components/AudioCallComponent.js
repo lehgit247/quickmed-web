@@ -1,158 +1,271 @@
 'use client';
-import { useEffect, useRef, useState } from 'react';
+
+import { useCallback, useEffect, useRef, useState } from 'react';
 import AgoraRTC from 'agora-rtc-sdk-ng';
 
-export default function AudioCallComponent({ patientInfo, doctorInfo, onEndCall }) {
+function createUid() {
+  return Math.floor(Math.random() * 1000000) + 1;
+}
+
+function safeChannelName(value) {
+  return String(value || '')
+    .trim()
+    .replace(/[^a-zA-Z0-9_!#$%&()+\-:;<=.>?@[\]^{}|~, ]/g, '_')
+    .slice(0, 60);
+}
+
+export default function AudioCallComponent({
+  patientInfo,
+  doctorInfo,
+  consultationId,
+  channelName,
+  onEndCall,
+  autoStart = false,
+  registerPatient = true
+}) {
   const [isJoined, setIsJoined] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
   const [error, setError] = useState(null);
-  
+  const [activeChannel, setActiveChannel] = useState(
+    safeChannelName(channelName || consultationId)
+  );
+  const [remoteUsers, setRemoteUsers] = useState(0);
+
   const clientRef = useRef(null);
   const localAudioTrackRef = useRef(null);
-  const channelName = useRef(`audio_${Math.floor(Math.random() * 1000000)}`);
+  const consultationIdRef = useRef(consultationId || null);
+  const hasAutoStartedRef = useRef(false);
 
-  const joinCall = async () => {
+  const cleanup = useCallback(async () => {
+    try {
+      localAudioTrackRef.current?.stop();
+      localAudioTrackRef.current?.close();
+      localAudioTrackRef.current = null;
+
+      if (clientRef.current) {
+        clientRef.current.removeAllListeners();
+        await clientRef.current.leave();
+        clientRef.current = null;
+      }
+
+      setRemoteUsers(0);
+    } catch (err) {
+      console.error('Error cleaning up audio call:', err);
+    }
+  }, []);
+
+  const registerConsultation = useCallback(async () => {
+    if (!registerPatient || activeChannel) {
+      return {
+        consultationId: consultationIdRef.current,
+        channelName: activeChannel || safeChannelName(channelName || consultationId)
+      };
+    }
+
+    const response = await fetch('/api/consultation/match', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        type: 'patient_request',
+        consultationType: 'call',
+        patientInfo: {
+          name: patientInfo?.name || 'Patient',
+          symptoms: patientInfo?.symptoms || 'Audio consultation requested'
+        }
+      })
+    });
+
+    const result = await response.json();
+
+    if (!result.success) {
+      throw new Error(result.error || 'Could not create an audio room.');
+    }
+
+    consultationIdRef.current = result.consultationId;
+    setActiveChannel(result.channelName);
+
+    return result;
+  }, [activeChannel, channelName, consultationId, patientInfo, registerPatient]);
+
+  const getAgoraCredentials = async (roomName, uid) => {
+    const response = await fetch('/api/agora/generate-token', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        channelName: roomName,
+        uid,
+        role: 'publisher'
+      })
+    });
+
+    const result = await response.json();
+
+    if (!response.ok) {
+      throw new Error(result.error || 'Could not prepare the audio service.');
+    }
+
+    return result;
+  };
+
+  const joinCall = useCallback(async () => {
     if (isLoading || isJoined) return;
-    
+
     setIsLoading(true);
     setError(null);
 
     try {
-      const appId = process.env.NEXT_PUBLIC_AGORA_APP_ID;
-      
-      if (!appId || appId === 'your_actual_agora_app_id_here') {
-        throw new Error('Agora App ID not configured');
+      if (!navigator.mediaDevices?.getUserMedia) {
+        throw new Error('Microphone access is not available in this browser.');
       }
 
-      console.log('🔑 Audio call - Using App ID:', appId);
-      console.log('📞 Audio channel:', channelName.current);
+      const permissionStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      permissionStream.getTracks().forEach((track) => track.stop());
 
-      // Create Agora client (audio only)
-      clientRef.current = AgoraRTC.createClient({ mode: 'rtc', codec: 'vp8' });
-      
-      // Handle remote users
-      clientRef.current.on('user-published', async (user, mediaType) => {
-        await clientRef.current.subscribe(user, mediaType);
-        if (mediaType === 'audio') {
-          user.audioTrack?.play();
+      const room = await registerConsultation();
+      const roomName = safeChannelName(room.channelName || activeChannel || consultationId);
+
+      if (!roomName) {
+        throw new Error('Missing consultation room name.');
+      }
+
+      const uid = createUid();
+      const { appId, token } = await getAgoraCredentials(roomName, uid);
+
+      if (!appId) {
+        throw new Error('Agora App ID is not configured.');
+      }
+
+      const client = AgoraRTC.createClient({ mode: 'rtc', codec: 'vp8' });
+      clientRef.current = client;
+
+      client.on('user-published', async (user, mediaType) => {
+        await client.subscribe(user, mediaType);
+        setRemoteUsers(client.remoteUsers.length);
+
+        if (mediaType === 'audio' && user.audioTrack) {
+          user.audioTrack.play();
         }
       });
 
-      // Join channel
-      await clientRef.current.join(appId, channelName.current, null, null);
-      console.log('✅ Joined audio channel successfully');
-      
-      // Create local audio track only (no video)
+      client.on('user-unpublished', () => setRemoteUsers(client.remoteUsers.length));
+      client.on('user-left', () => setRemoteUsers(client.remoteUsers.length));
+
+      await client.join(appId, roomName, token || null, uid);
+
       const audioTrack = await AgoraRTC.createMicrophoneAudioTrack();
       localAudioTrackRef.current = audioTrack;
-      
-      // Publish audio track
-      await clientRef.current.publish([audioTrack]);
-      console.log('📡 Published audio track');
-      
+
+      await client.publish([audioTrack]);
+
+      setActiveChannel(roomName);
+      setRemoteUsers(client.remoteUsers.length);
       setIsJoined(true);
-      
-    } catch (error) {
-      console.error('❌ Failed to join audio call:', error);
-      setError(error.message || 'Failed to join audio call');
+    } catch (err) {
+      console.error('Failed to join audio call:', err);
+      await cleanup();
+      setError(err.message || 'Failed to join audio call.');
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [activeChannel, cleanup, consultationId, isJoined, isLoading, registerConsultation]);
 
-  const toggleMute = () => {
-    if (localAudioTrackRef.current) {
-      localAudioTrackRef.current.setEnabled(isMuted);
-      setIsMuted(!isMuted);
-    }
+  const toggleMute = async () => {
+    if (!localAudioTrackRef.current) return;
+    await localAudioTrackRef.current.setEnabled(isMuted);
+    setIsMuted(!isMuted);
   };
 
   const leaveCall = async () => {
-    try {
-      if (clientRef.current && isJoined) {
-        await clientRef.current.leave();
-        console.log('👋 Left audio channel');
-      }
-      
-      if (localAudioTrackRef.current) {
-        localAudioTrackRef.current.close();
-      }
-      
-      setIsJoined(false);
-      if (onEndCall) onEndCall();
-    } catch (error) {
-      console.error('Error leaving call:', error);
+    await cleanup();
+
+    if (consultationIdRef.current) {
+      fetch('/api/consultation/match', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          type: 'end_consultation',
+          consultationId: consultationIdRef.current
+        })
+      }).catch((err) => console.error('Could not end consultation:', err));
     }
+
+    setIsJoined(false);
+    onEndCall?.();
   };
 
   useEffect(() => {
+    if (autoStart && !hasAutoStartedRef.current) {
+      hasAutoStartedRef.current = true;
+      joinCall();
+    }
+  }, [autoStart, joinCall]);
+
+  useEffect(() => {
     return () => {
-      if (localAudioTrackRef.current) {
-        localAudioTrackRef.current.close();
-      }
-      if (clientRef.current && isJoined) {
-        clientRef.current.leave();
-      }
+      cleanup();
     };
-  }, [isJoined]);
+  }, [cleanup]);
 
   return (
     <div style={styles.container}>
       <div style={styles.header}>
         <div>
-          <h3 style={styles.title}>📞 Audio Consultation</h3>
-          <p style={styles.subtitle}>with Dr. {doctorInfo?.name || 'Smith'}</p>
+          <h3 style={styles.title}>Audio Consultation</h3>
+          <p style={styles.subtitle}>
+            with Dr. {doctorInfo?.name || 'Available Doctor'}
+            {activeChannel ? ` • Room: ${activeChannel}` : ''}
+          </p>
         </div>
-        {!isJoined && !isLoading && !error && (
+
+        {!isJoined && !isLoading ? (
           <button onClick={joinCall} style={styles.startButton}>
             Start Audio Call
           </button>
-        )}
-        {isJoined && (
+        ) : null}
+
+        {isJoined ? (
           <button onClick={leaveCall} style={styles.endButton}>
             End Call
           </button>
-        )}
+        ) : null}
       </div>
 
-      {error && (
+      {error ? (
         <div style={styles.error}>
-          <p>❌ {error}</p>
+          <p>{error}</p>
           <button onClick={() => setError(null)} style={styles.dismissButton}>
             Try Again
           </button>
         </div>
-      )}
+      ) : null}
 
-      {isLoading && !isJoined && (
+      {isLoading && !isJoined ? (
         <div style={styles.loading}>
-          <div style={styles.spinner}></div>
+          <div style={styles.spinner} />
           <p>Connecting to doctor...</p>
         </div>
-      )}
+      ) : null}
 
-      {isJoined && (
+      {isJoined ? (
         <div style={styles.callStatus}>
-          <div style={styles.statusIcon}>📞</div>
-          <p style={styles.statusText}>Connected to Dr. {doctorInfo?.name || 'Smith'}</p>
+          <div style={styles.statusIcon}>Call active</div>
+          <p style={styles.statusText}>
+            {remoteUsers ? `Connected to Dr. ${doctorInfo?.name || 'Available Doctor'}` : 'Waiting for doctor to join...'}
+          </p>
           <div style={styles.controls}>
             <button onClick={toggleMute} style={styles.controlButton}>
-              {isMuted ? '🔇 Unmute' : '🎤 Mute'}
+              {isMuted ? 'Unmute' : 'Mute'}
             </button>
           </div>
-          <p style={styles.timer}>Call in progress...</p>
+          <p style={styles.timer}>Audio consultation in progress</p>
         </div>
-      )}
+      ) : null}
 
       <style jsx>{`
         @keyframes spin {
           0% { transform: rotate(0deg); }
           100% { transform: rotate(360deg); }
-        }
-        @keyframes pulse {
-          0%, 100% { transform: scale(1); }
-          50% { transform: scale(1.1); }
         }
       `}</style>
     </div>
@@ -164,23 +277,24 @@ const styles = {
     width: '100%',
     background: '#f5f5f5',
     borderRadius: '12px',
-    padding: '20px',
+    padding: '20px'
   },
   header: {
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: '20px',
+    gap: '16px',
+    marginBottom: '20px'
   },
   title: {
     color: '#000000',
     margin: 0,
-    fontSize: '18px',
+    fontSize: '18px'
   },
   subtitle: {
     color: '#666',
     margin: '5px 0 0 0',
-    fontSize: '12px',
+    fontSize: '12px'
   },
   startButton: {
     padding: '10px 20px',
@@ -189,7 +303,7 @@ const styles = {
     border: 'none',
     borderRadius: '6px',
     cursor: 'pointer',
-    fontWeight: '600',
+    fontWeight: '600'
   },
   endButton: {
     padding: '10px 20px',
@@ -198,7 +312,7 @@ const styles = {
     border: 'none',
     borderRadius: '6px',
     cursor: 'pointer',
-    fontWeight: '600',
+    fontWeight: '600'
   },
   error: {
     background: '#f8d7da',
@@ -209,6 +323,7 @@ const styles = {
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
+    color: '#721c24'
   },
   dismissButton: {
     background: 'none',
@@ -216,13 +331,13 @@ const styles = {
     color: '#721c24',
     padding: '5px 10px',
     borderRadius: '4px',
-    cursor: 'pointer',
+    cursor: 'pointer'
   },
   loading: {
     textAlign: 'center',
     padding: '40px',
     background: 'white',
-    borderRadius: '8px',
+    borderRadius: '8px'
   },
   spinner: {
     width: '40px',
@@ -231,42 +346,42 @@ const styles = {
     borderTop: '4px solid #2c5530',
     borderRadius: '50%',
     animation: 'spin 1s linear infinite',
-    margin: '0 auto 10px',
+    margin: '0 auto 10px'
   },
   callStatus: {
     textAlign: 'center',
     padding: '40px',
     background: 'white',
-    borderRadius: '8px',
+    borderRadius: '8px'
   },
   statusIcon: {
-    fontSize: '48px',
+    fontSize: '22px',
     marginBottom: '20px',
-    animation: 'pulse 2s ease-in-out infinite',
+    fontWeight: 700
   },
   statusText: {
     fontSize: '18px',
     fontWeight: 'bold',
     color: '#2c5530',
-    marginBottom: '20px',
+    marginBottom: '20px'
   },
   controls: {
     display: 'flex',
     justifyContent: 'center',
     gap: '20px',
-    marginBottom: '20px',
+    marginBottom: '20px'
   },
   controlButton: {
     padding: '10px 20px',
-    background: '#007bff',
+    background: '#2457a6',
     color: 'white',
     border: 'none',
     borderRadius: '6px',
     cursor: 'pointer',
-    fontSize: '14px',
+    fontSize: '14px'
   },
   timer: {
     color: '#666',
-    fontSize: '12px',
-  },
+    fontSize: '12px'
+  }
 };

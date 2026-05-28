@@ -1,7 +1,10 @@
 "use client";
+
 import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { useLanguage } from "../context/LanguageContext";
+import { getTranslations } from "../i18n";
 
 const HOSPITALS = [
   { name: "CityCare Specialist Hospital", city: "Abuja", distanceKm: 3.2, phone: "0901 234 5678", services: ["Emergency", "Internal Medicine", "Surgery"], rating: 4.8 },
@@ -12,23 +15,28 @@ const HOSPITALS = [
 ];
 
 export default function BookPage() {
+  const { language } = useLanguage();
+  const t = getTranslations(language);
   const [city, setCity] = useState("");
   const [results, setResults] = useState(HOSPITALS);
   const [success, setSuccess] = useState(null);
 
   function search() {
     const term = city.trim().toLowerCase();
-    if (!term) { setResults(HOSPITALS); return; }
-    setResults(HOSPITALS.filter((h) => h.city.toLowerCase().includes(term)));
+    if (!term) {
+      setResults(HOSPITALS);
+      return;
+    }
+    setResults(HOSPITALS.filter((hospital) => hospital.city.toLowerCase().includes(term)));
   }
 
-  function book(h) {
+  function book(hospital) {
     setSuccess({
-      name: h.name,
-      city: h.city,
-      phone: h.phone,
+      name: hospital.name,
+      city: hospital.city,
+      phone: hospital.phone,
       ref: "QMC-" + Math.floor(100000 + Math.random() * 900000),
-      eta: "~15–25 min",
+      eta: "~15-25 min",
     });
   }
 
@@ -43,15 +51,15 @@ export default function BookPage() {
             height={64}
             style={{ display: "block", margin: "0 auto 10px" }}
           />
-          <h2>Appointment Booked 🎉</h2>
-          <p><strong>{success.name}</strong> — {success.city}</p>
-          <p>Reference: <strong>{success.ref}</strong></p>
-          <p>Hospital Phone: <strong>{success.phone}</strong></p>
-          <p>Estimated check-in time: <strong>{success.eta}</strong></p>
+          <h2>{t.appointmentBooked}</h2>
+          <p><strong>{success.name}</strong> - {success.city}</p>
+          <p>{t.reference}: <strong>{success.ref}</strong></p>
+          <p>{t.hospitalPhone}: <strong>{success.phone}</strong></p>
+          <p>{t.estimatedCheckIn}: <strong>{success.eta}</strong></p>
 
           <div className="row">
-            <Link href="/" className="btn btn-ghost">Back Home</Link>
-            <Link href="/consult" className="btn btn-primary">Start a Consult</Link>
+            <Link href="/" className="btn btn-ghost">{t.backHome}</Link>
+            <Link href="/consult" className="btn btn-primary">{t.startConsult}</Link>
           </div>
         </div>
       </section>
@@ -60,30 +68,29 @@ export default function BookPage() {
 
   return (
     <section className="container book">
-      <h1 className="book-title">Find a Vetted Hospital</h1>
+      <h1 className="book-title">{t.findHospital}</h1>
 
       <div className="search">
         <input
-          placeholder="Type your city (e.g., Abuja, Lagos, Port Harcourt)"
+          placeholder={t.cityPlaceholder}
           value={city}
-          onChange={(e) => setCity(e.target.value)}
-          onKeyDown={(e) => e.key === "Enter" && search()}
+          onChange={(event) => setCity(event.target.value)}
+          onKeyDown={(event) => event.key === "Enter" && search()}
         />
-        <button onClick={search}>Search</button>
+        <button onClick={search}>{t.search}</button>
       </div>
 
       <div className="hospitals">
-        {results.map((h) => (
-          <div key={h.name} className="h-card">
-            <h3 className="h-name">{h.name}</h3>
+        {results.map((hospital) => (
+          <div key={hospital.name} className="h-card">
+            <h3 className="h-name">{hospital.name}</h3>
             <p className="h-meta">
-              {h.city} • ⭐ {h.rating} • {h.distanceKm} km away
+              {hospital.city} - {hospital.rating} - {hospital.distanceKm} {t.kmAway}
             </p>
-            <p className="h-meta">Services: {h.services.join(", ")}</p>
+            <p className="h-meta">{t.services}: {hospital.services.join(", ")}</p>
             <div className="h-actions">
-              {/* tel: is okay as a normal <a> */}
-              <a className="btn btn-ghost" href={`tel:${h.phone.replace(/\s/g, "")}`}>Call</a>
-              <button className="btn btn-primary" onClick={() => book(h)}>Book Appointment</button>
+              <a className="btn btn-ghost" href={`tel:${hospital.phone.replace(/\s/g, "")}`}>{t.call}</a>
+              <button className="btn btn-primary" onClick={() => book(hospital)}>{t.bookAppointment}</button>
             </div>
           </div>
         ))}
