@@ -1781,7 +1781,13 @@ input:checked + .slider:before {
 .mobile-language {
   padding: 1rem;
   border-top: 1px solid #e2e8f0;
-  margin-top: 1rem;
+  margin-top: 0;
+}
+
+.mobile-language .language-switcher {
+  display: block;
+  margin: 0;
+  width: 100%;
 }
 
 .mobile-language .language-select {
@@ -1873,7 +1879,8 @@ input:checked + .slider:before {
     padding: 1rem;
   }
   
-  .language-switcher {
+  .nav-links .language-switcher,
+  .mobile-language-top {
     display: none;
   }
 }
@@ -1929,7 +1936,7 @@ input:checked + .slider:before {
 
 @media (max-width: 768px) {
   .mobile-language-top {
-    display: block;
+    display: none;
     margin-right: 1rem;
   }
   

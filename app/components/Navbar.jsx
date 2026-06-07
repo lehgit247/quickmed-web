@@ -55,10 +55,6 @@ export default function Navbar() {
           <LanguageSwitcher />
         </div>
 
-        <div className="mobile-language-top">
-          <LanguageSwitcher />
-        </div>
-
         <button
           className="menu-btn"
           onClick={() => setMenuOpen(!menuOpen)}
@@ -74,7 +70,7 @@ export default function Navbar() {
                 {link.label}
               </Link>
             ))}
-            <div className="mobile-language">
+            <div className="mobile-language menu-item-language">
               <LanguageSwitcher />
             </div>
           </div>
