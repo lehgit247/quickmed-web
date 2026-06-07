@@ -558,18 +558,153 @@ body { margin: 0; font-family: Arial, sans-serif; }
   margin-top: 10px;
 }
 .consult-form input,
-.consult-form textarea {
+.consult-form textarea,
+.consult-form select {
   width: 100%;
   margin-top: 6px;
   padding: 12px;
   border-radius: 10px;
   border: 1px solid #e5e7eb;
   outline: none;
+  background: #ffffff;
 }
 .consult-form input:focus,
-.consult-form textarea:focus {
+.consult-form textarea:focus,
+.consult-form select:focus {
   border-color: #2563eb;
   box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+}
+
+.address-finder {
+  margin-top: 14px;
+  padding: 14px;
+  border: 1px solid #dbeafe;
+  border-radius: 12px;
+  background: #f8fbff;
+}
+
+.address-finder-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.address-finder-header h3 {
+  margin: 0;
+  color: #0f172a;
+  font-size: 18px;
+}
+
+.address-finder-header p {
+  margin: 4px 0 0;
+  color: #475569;
+  font-size: 14px;
+  line-height: 1.45;
+}
+
+.location-btn,
+.maps-link {
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+.location-status {
+  margin-top: 10px;
+  padding: 9px 10px;
+  border-radius: 8px;
+  background: #ecfdf5;
+  color: #047857;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.nearby-hospitals {
+  margin-top: 12px;
+  display: grid;
+  gap: 12px;
+}
+
+.nearby-hospitals-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.nearby-hospitals-header strong,
+.nearby-hospitals-header span {
+  display: block;
+}
+
+.nearby-hospitals-header strong {
+  color: #0f172a;
+}
+
+.nearby-hospitals-header span {
+  margin-top: 3px;
+  color: #64748b;
+  font-size: 13px;
+  line-height: 1.35;
+}
+
+.hospital-result-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 10px;
+}
+
+.hospital-result {
+  display: grid;
+  gap: 4px;
+  min-height: 112px;
+  padding: 12px;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  background: #ffffff;
+  color: #0f172a;
+  text-decoration: none;
+}
+
+.hospital-result:hover {
+  border-color: #2563eb;
+  box-shadow: 0 8px 20px rgba(37, 99, 235, 0.12);
+}
+
+.hospital-result span {
+  color: #2563eb;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.hospital-result small {
+  color: #64748b;
+  line-height: 1.35;
+}
+
+.hospital-map {
+  width: 100%;
+  height: 260px;
+  border: 0;
+  border-radius: 10px;
+  background: #e2e8f0;
+}
+
+@media (max-width: 640px) {
+  .address-finder-header,
+  .nearby-hospitals-header {
+    display: grid;
+  }
+
+  .location-btn,
+  .maps-link {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .hospital-map {
+    height: 220px;
+  }
 }
 .row {
   display: flex;

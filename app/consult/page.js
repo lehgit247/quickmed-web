@@ -61,6 +61,18 @@ const translations = {
     fullName: "Full name",
     phoneNumber: "Phone number",
     city: "City",
+    address: "Street address or current location",
+    addressPlaceholder: "e.g., 15 Ademola Adetokunbo Crescent, Wuse 2",
+    careLocationTitle: "Care location",
+    careLocationText: "Add where you are so QuickMed can show nearby hospitals and emergency centers.",
+    nearestHospitals: "Nearest hospitals around this location",
+    nearestHospitalsHint: "Open a hospital to view live distance, route, hours, and availability in Google Maps.",
+    openInMaps: "Open in Maps",
+    useMyLocation: "Use my location",
+    findingLocation: "Finding your current location...",
+    locationAdded: "Location added. Nearby hospitals are ready below.",
+    locationDenied: "We could not access your location. You can type your address instead.",
+    locationUnavailable: "Location services are not available on this device.",
     describeSymptoms: "Describe your symptoms",
     connectToDoctor: "Connect to Doctor",
     backHome: "Back Home",
@@ -146,6 +158,18 @@ const translations = {
     fullName: "Nom complet",
     phoneNumber: "Numéro de téléphone",
     city: "Ville",
+    address: "Adresse ou position actuelle",
+    addressPlaceholder: "ex. Wuse 2, Abuja",
+    careLocationTitle: "Lieu de soins",
+    careLocationText: "Ajoutez votre position pour afficher les hôpitaux proches.",
+    nearestHospitals: "Hôpitaux les plus proches",
+    nearestHospitalsHint: "Ouvrez Maps pour voir la distance et l'itinéraire en direct.",
+    openInMaps: "Ouvrir dans Maps",
+    useMyLocation: "Utiliser ma position",
+    findingLocation: "Recherche de votre position...",
+    locationAdded: "Position ajoutée. Les hôpitaux proches sont prêts ci-dessous.",
+    locationDenied: "Impossible d'accéder à votre position. Saisissez votre adresse.",
+    locationUnavailable: "La localisation n'est pas disponible sur cet appareil.",
     describeSymptoms: "Décrivez vos symptômes",
     connectToDoctor: "Connecter au Médecin",
     backHome: "Retour à l'Accueil",
@@ -233,6 +257,18 @@ const translations = {
     fullName: "Nombre completo",
     phoneNumber: "Número de teléfono",
     city: "Ciudad",
+    address: "Dirección o ubicación actual",
+    addressPlaceholder: "ej., Wuse 2, Abuja",
+    careLocationTitle: "Ubicación de atención",
+    careLocationText: "Agrega dónde estás para mostrar hospitales cercanos.",
+    nearestHospitals: "Hospitales más cercanos",
+    nearestHospitalsHint: "Abre Maps para ver distancia, ruta y horarios en vivo.",
+    openInMaps: "Abrir en Maps",
+    useMyLocation: "Usar mi ubicación",
+    findingLocation: "Buscando tu ubicación...",
+    locationAdded: "Ubicación agregada. Los hospitales cercanos están listos abajo.",
+    locationDenied: "No pudimos acceder a tu ubicación. Escribe tu dirección.",
+    locationUnavailable: "La ubicación no está disponible en este dispositivo.",
     describeSymptoms: "Describa sus síntomas",
     connectToDoctor: "Conectar con Médico",
     backHome: "Volver al Inicio",
@@ -304,6 +340,59 @@ const consultationTypes = {
   emergency: { name: translations.en.emergencyCall, price: 10000 } // ₦10,000
 };
 
+const preferredLanguageOptions = [
+  { value: '', label: 'English' },
+  { value: 'french', label: 'French' },
+  { value: 'spanish', label: 'Spanish' },
+  { value: 'arabic', label: 'Arabic' },
+  { value: 'portuguese', label: 'Portuguese' },
+  { value: 'mandarin', label: 'Chinese / Mandarin' },
+  { value: 'yoruba', label: 'Yoruba' },
+  { value: 'hausa', label: 'Hausa' },
+  { value: 'igbo', label: 'Igbo' },
+  { value: 'efik', label: 'Efik' }
+];
+
+const hospitalDirectory = {
+  lagos: [
+    { name: 'Lagos University Teaching Hospital', area: 'Idi-Araba', phone: '+234 802 340 8619', services: 'Emergency, General Medicine' },
+    { name: 'Reddington Hospital', area: 'Victoria Island', phone: '+234 700 733 3464', services: 'Emergency, Diagnostics' },
+    { name: 'Euracare Multi-Specialist Hospital', area: 'Victoria Island', phone: '+234 809 111 1520', services: 'Specialist Care, Imaging' }
+  ],
+  abuja: [
+    { name: 'National Hospital Abuja', area: 'Central Business District', phone: '+234 803 601 0329', services: 'Emergency, General Medicine' },
+    { name: 'Nisa Premier Hospital', area: 'Jabi', phone: '+234 809 777 7770', services: 'Family Medicine, Diagnostics' },
+    { name: 'Cedarcrest Hospitals', area: 'Gudu', phone: '+234 818 000 6000', services: 'Emergency, Specialist Care' }
+  ],
+  'port harcourt': [
+    { name: 'University of Port Harcourt Teaching Hospital', area: 'Alakahia', phone: '+234 803 310 0000', services: 'Emergency, General Medicine' },
+    { name: 'Braithwaite Memorial Specialist Hospital', area: 'Old GRA', phone: '+234 803 000 0000', services: 'Specialist Care, Emergency' },
+    { name: 'Savealife Mission Hospital', area: 'GRA Phase 2', phone: '+234 803 555 5000', services: 'Emergency, Surgery' }
+  ],
+  calabar: [
+    { name: 'University of Calabar Teaching Hospital', area: 'Moore Road', phone: '+234 803 400 0000', services: 'Emergency, General Medicine' },
+    { name: 'Navy Reference Hospital', area: 'Calabar', phone: '+234 803 500 0000', services: 'Emergency, Diagnostics' },
+    { name: 'Arubah Specialist Hospital', area: 'Calabar', phone: '+234 806 000 0000', services: 'Specialist Care, Family Medicine' }
+  ]
+};
+
+const defaultHospitals = [
+  { name: 'Nearest verified hospital', area: 'Open maps for live distance', phone: 'Use facility phone in maps', services: 'Emergency, General Medicine' },
+  { name: 'Nearest 24-hour emergency center', area: 'Open maps for live distance', phone: 'Use facility phone in maps', services: 'Emergency Care' },
+  { name: 'Nearest diagnostic center', area: 'Open maps for live distance', phone: 'Use facility phone in maps', services: 'Diagnostics, Lab Tests' }
+];
+
+function getHospitalsForLocation(city = '') {
+  const normalizedCity = city.trim().toLowerCase();
+  const key = Object.keys(hospitalDirectory).find((location) => normalizedCity.includes(location));
+  return key ? hospitalDirectory[key] : defaultHospitals;
+}
+
+function buildMapsUrl(query, hospitalName = '') {
+  const search = hospitalName ? `${hospitalName} near ${query}` : `hospitals near ${query}`;
+  return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(search)}`;
+}
+
 export default function ConsultPage() {
   
   const router = useRouter();
@@ -334,6 +423,7 @@ export default function ConsultPage() {
     name: "",
     phone: "",
     city: "",
+    address: "",
     symptoms: "",
     specialty: "",
     consultationType: "chat",
@@ -345,6 +435,7 @@ export default function ConsultPage() {
   const [error, setError] = useState("");
   const [match, setMatch] = useState(null);
   const [showPrescription, setShowPrescription] = useState(false);
+  const [locationStatus, setLocationStatus] = useState("");
 
   useEffect(() => {
     if (!paymentVerified || typeof window === 'undefined') return;
@@ -363,6 +454,24 @@ export default function ConsultPage() {
 
   function handleConsultationType(type) {
     setForm({ ...form, consultationType: type });
+  }
+
+  function useCurrentLocation() {
+    if (typeof navigator === 'undefined' || !navigator.geolocation) {
+      setLocationStatus(t.locationUnavailable);
+      return;
+    }
+
+    setLocationStatus(t.findingLocation);
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const coordinates = `${position.coords.latitude.toFixed(5)}, ${position.coords.longitude.toFixed(5)}`;
+        setForm((current) => ({ ...current, address: coordinates }));
+        setLocationStatus(t.locationAdded);
+      },
+      () => setLocationStatus(t.locationDenied),
+      { enableHighAccuracy: true, timeout: 10000 }
+    );
   }
 
   function handleSubmit(e) {
@@ -480,6 +589,7 @@ export default function ConsultPage() {
       email: form.phone,
       symptoms: form.symptoms,
       city: form.city,
+      address: form.address,
       from: 'consult'
     });
 
@@ -502,9 +612,10 @@ export default function ConsultPage() {
   }
 
   function reset() {
-    setForm({ name: "", phone: "", city: "", symptoms: "", specialty: "", consultationType: "chat", travelMode: false, language: "", homeCountry: "" });
+    setForm({ name: "", phone: "", city: "", address: "", symptoms: "", specialty: "", consultationType: "chat", travelMode: false, language: "", homeCountry: "", insuranceProvider: "" });
     setMatch(null);
     setShowPrescription(false);
+    setLocationStatus("");
   }
 
   // Mock prescription data
@@ -582,6 +693,13 @@ export default function ConsultPage() {
     }
   }
 
+  const locationQuery = [form.address, form.city].filter(Boolean).join(', ');
+  const hospitalResults = getHospitalsForLocation(form.city || form.address);
+  const mapsSearchUrl = locationQuery ? buildMapsUrl(locationQuery) : '';
+  const mapsEmbedUrl = locationQuery
+    ? `https://www.google.com/maps?q=${encodeURIComponent(`hospitals near ${locationQuery}`)}&output=embed`
+    : '';
+
   return (
     <section className="container consult">
       <h1 className="consult-title">{t.quickConsultation}</h1>
@@ -618,6 +736,68 @@ export default function ConsultPage() {
             />
           </label>
 
+          <div className="address-finder">
+            <div className="address-finder-header">
+              <div>
+                <h3>{t.careLocationTitle}</h3>
+                <p>{t.careLocationText}</p>
+              </div>
+              <button type="button" className="btn btn-ghost location-btn" onClick={useCurrentLocation}>
+                {t.useMyLocation}
+              </button>
+            </div>
+
+            <label>
+              {t.address}
+              <input
+                name="address"
+                value={form.address}
+                onChange={onChange}
+                placeholder={t.addressPlaceholder}
+              />
+            </label>
+
+            {locationStatus && <div className="location-status">{locationStatus}</div>}
+
+            {locationQuery && (
+              <div className="nearby-hospitals">
+                <div className="nearby-hospitals-header">
+                  <div>
+                    <strong>{t.nearestHospitals}</strong>
+                    <span>{t.nearestHospitalsHint}</span>
+                  </div>
+                  <a href={mapsSearchUrl} target="_blank" rel="noreferrer" className="btn btn-primary maps-link">
+                    {t.openInMaps}
+                  </a>
+                </div>
+
+                <div className="hospital-result-list">
+                  {hospitalResults.map((hospital) => (
+                    <a
+                      key={`${hospital.name}-${hospital.area}`}
+                      href={buildMapsUrl(locationQuery, hospital.name)}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="hospital-result"
+                    >
+                      <strong>{hospital.name}</strong>
+                      <span>{hospital.area}</span>
+                      <small>{hospital.services} - {hospital.phone}</small>
+                    </a>
+                  ))}
+                </div>
+
+                <iframe
+                  title={t.nearestHospitals}
+                  src={mapsEmbedUrl}
+                  className="hospital-map"
+                  loading="lazy"
+                  referrerPolicy="no-referrer-when-downgrade"
+                />
+              </div>
+            )}
+          </div>
+
           <label className="travel-mode-toggle">
             <div className="travel-mode-header">
               <span className="travel-icon">🧳</span>
@@ -639,11 +819,11 @@ export default function ConsultPage() {
                 <label>
                   {t.preferredLanguage}
                   <select name="language" value={form.language || ''} onChange={onChange}>
-                    <option value="">English</option>
-                    <option value="french">French</option>
-                    <option value="spanish">Spanish</option>
-                    <option value="arabic">Arabic</option>
-                    <option value="portuguese">Portuguese</option>
+                    {preferredLanguageOptions.map((option) => (
+                      <option key={option.value || 'english'} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
                   </select>
                 </label>
                 <label>
@@ -913,7 +1093,7 @@ export default function ConsultPage() {
   {/* Action Buttons - Payment and Prescription */}
   <div style={{display: 'flex', gap: '10px', marginTop: '10px'}}>
     <Link 
-      href={`/payment?type=${form.consultationType}&doctor=${match.name}&amount=${consultationTypes[form.consultationType]?.price}&name=${form.name}&email=${form.phone}&symptoms=${encodeURIComponent(form.symptoms)}&city=${form.city}`}
+      href={`/payment?type=${form.consultationType}&doctor=${match.name}&amount=${consultationTypes[form.consultationType]?.price}&name=${form.name}&email=${form.phone}&symptoms=${encodeURIComponent(form.symptoms)}&city=${encodeURIComponent(form.city)}&address=${encodeURIComponent(form.address)}`}
       className="btn btn-primary"
       onClick={() => {
         localStorage.setItem(
